@@ -11,7 +11,6 @@ var validCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 func characterToPriority(character string) int {
 	for idx, letter := range validCharacters {
 		if string(letter) == character {
-			fmt.Printf("Found %v\n", string(letter))
 			return idx + 1
 		}
 	}
@@ -40,7 +39,6 @@ func Part1(filePath string) {
 	for _, row := range rows {
 		items1 := row[:len(row)/2]
 		items2 := row[len(row)/2:]
-		fmt.Println(items1, items2)
 		result += sharedItemPriority(items1, items2)
 	}
 	fmt.Println(result)

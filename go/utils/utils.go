@@ -24,3 +24,10 @@ func GetIfExists[K comparable, V any](dict map[K]V, key K) V {
 	}
 	return value
 }
+
+func PanicIfErr[T any](val T, err error) T {
+	if err != nil {
+		panic(err)
+	}
+	return val
+}

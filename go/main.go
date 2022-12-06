@@ -1,7 +1,7 @@
 package main
 
-import "github.com/thomasschafer/advent_of_code_2022/day3"
+import "github.com/thomasschafer/advent_of_code_2022/day4"
 
 func main() {
-	day3.Part1("../data/day_3.txt")
+	day4.Part1("../data/day_4.txt")
 }
