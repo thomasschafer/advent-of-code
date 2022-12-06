@@ -1,7 +1,6 @@
 package day2
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/thomasschafer/advent_of_code_2022/utils"
@@ -29,7 +28,7 @@ func calculateScore2(opponentShape, requiredResult string) int {
 	return requiredUserShapeScore + resultScore
 }
 
-func Part2(filePath string) {
+func Part2(filePath string) int {
 	rows := utils.RowsFromFile(filePath)
 	userScore := 0
 	for _, row := range rows {
@@ -38,5 +37,5 @@ func Part2(filePath string) {
 		requiredResult := shapes[1]
 		userScore += calculateScore2(opponentShape, requiredResult)
 	}
-	fmt.Println(userScore)
+	return userScore
 }

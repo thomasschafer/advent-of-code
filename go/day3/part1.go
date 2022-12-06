@@ -33,7 +33,7 @@ func sharedItemPriority(item1, item2 string) int {
 	return 0
 }
 
-func Part1(filePath string) {
+func Part1(filePath string) int {
 	rows := utils.RowsFromFile(filePath)
 	result := 0
 	for _, row := range rows {
@@ -41,5 +41,5 @@ func Part1(filePath string) {
 		items2 := row[len(row)/2:]
 		result += sharedItemPriority(items1, items2)
 	}
-	fmt.Println(result)
+	return result
 }

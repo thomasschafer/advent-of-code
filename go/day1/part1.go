@@ -1,8 +1,6 @@
 package day1
 
 import (
-	"fmt"
-
 	"cuelang.org/go/pkg/strconv"
 	"github.com/thomasschafer/advent_of_code_2022/utils"
 	"golang.org/x/exp/constraints"
@@ -15,7 +13,7 @@ func max[T constraints.Ordered](a, b T) T {
 	return b
 }
 
-func Part1(filePath string) {
+func Part1(filePath string) int {
 	rows := utils.RowsFromFile(filePath)
 
 	var maxTotalCalories int = 0
@@ -31,5 +29,5 @@ func Part1(filePath string) {
 		}
 	}
 
-	fmt.Println(maxTotalCalories)
+	return maxTotalCalories
 }

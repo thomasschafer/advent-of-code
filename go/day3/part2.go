@@ -24,11 +24,11 @@ func priorityOfBadge(items1, items2, items3 string) int {
 	panic(fmt.Sprintf("No shared element found for items %v, %v and %v", items1, items2, items3))
 }
 
-func Part2(filePath string) {
+func Part2(filePath string) int {
 	rows := utils.RowsFromFile(filePath)
 	result := 0
 	for i := 0; i+2 < len(rows); i += 3 {
 		result += priorityOfBadge(rows[i], rows[i+1], rows[i+2])
 	}
-	fmt.Println(result)
+	return result
 }
