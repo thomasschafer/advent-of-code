@@ -1,4 +1,4 @@
-package main
+package day1
 
 import (
 	"fmt"
@@ -15,8 +15,8 @@ func max[T constraints.Ordered](a, b T) T {
 	return b
 }
 
-func main() {
-	rows := utils.RowsFromFile("../data/day_1.txt")
+func Part1(filePath string) {
+	rows := utils.RowsFromFile(filePath)
 
 	var maxTotalCalories int = 0
 	var currentTotalCalories int = 0
