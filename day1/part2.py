@@ -1,7 +1,9 @@
+# TODO: Rewrite in Go, and replace MaxLengthArray with max heap
+
 class MaxLengthArray:
-    def __init__(self, max=3):
+    def __init__(self, max_length=3):
         self.data = []
-        self.max = max
+        self.max = max_length
 
     def add_if_large_enough(self, value):
         if len(self.data) < self.max:
@@ -20,9 +22,9 @@ class MaxLengthArray:
                 self.data = new_data
 
 def calculate_max_calories(file_name: str) -> int:
-    with open(file_name, 'r') as file:
+    with open(file_name, "r") as file:
         data = file.read()
-    rows = data.split('\n')
+    rows = data.split("\n")
 
     maxTotalCalories = MaxLengthArray()
     currentTotalCalories = 0
@@ -34,6 +36,7 @@ def calculate_max_calories(file_name: str) -> int:
         else:
             currentTotalCalories += int(calories)
     return sum(maxTotalCalories.data)
+
 
 if __name__ == "__main__":
     print(calculate_max_calories("../data/day_1.txt"))
