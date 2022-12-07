@@ -66,7 +66,7 @@ func parseStackFile(filePath string) StackInstructions {
 	return stackInstructions
 }
 
-func (stackInstructions StackInstructions) applyInstructions() {
+func (stackInstructions StackInstructions) applyInstructionsPart1() {
 	for _, instruction := range stackInstructions.instructions {
 		for i := 0; i < instruction.numToMove; i++ {
 			fromStack := stackInstructions.stacks[instruction.from-1]
@@ -79,7 +79,7 @@ func (stackInstructions StackInstructions) applyInstructions() {
 
 func Part1(filePath string) string {
 	stackInstructions := parseStackFile(filePath)
-	stackInstructions.applyInstructions()
+	stackInstructions.applyInstructionsPart1()
 
 	topCrates := []string{}
 	for _, stack := range stackInstructions.stacks {
