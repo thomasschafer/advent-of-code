@@ -1,7 +1,6 @@
 package day5
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -67,15 +66,24 @@ func parseStackFile(filePath string) StackInstructions {
 	return stackInstructions
 }
 
-func Part1(filePath string) []string {
-	stackInstructions := parseStackFile(filePath)
-	fmt.Println("----- Stacks: -----")
-	for _, stack := range stackInstructions.stacks {
-		fmt.Println(stack)
-	}
-	fmt.Println("----- Instructions: -----")
+func (stackInstructions StackInstructions) applyInstructions() {
 	for _, instruction := range stackInstructions.instructions {
-		fmt.Printf("%#v\n", instruction)
+		for i := 0; i < instruction.numToMove; i++ {
+			fromStack := stackInstructions.stacks[instruction.from-1]
+			elementToMove := fromStack[len(fromStack)-1]
+			stackInstructions.stacks[instruction.to-1] = append(stackInstructions.stacks[instruction.to-1], elementToMove)
+			stackInstructions.stacks[instruction.from-1] = fromStack[:len(fromStack)-1]
+		}
 	}
-	return []string{} // TODO
+}
+
+func Part1(filePath string) string {
+	stackInstructions := parseStackFile(filePath)
+	stackInstructions.applyInstructions()
+
+	topCrates := []string{}
+	for _, stack := range stackInstructions.stacks {
+		topCrates = append(topCrates, stack[len(stack)-1])
+	}
+	return strings.Join(topCrates, "")
 }
