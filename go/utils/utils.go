@@ -3,11 +3,14 @@ package utils
 import (
 	"fmt"
 	"os"
+	"sort"
 	"strings"
+
+	"golang.org/x/exp/constraints"
 )
 
-func RowsFromFile(file_path string) []string {
-	b, err := os.ReadFile(file_path)
+func RowsFromFile(filePath string) []string {
+	b, err := os.ReadFile(filePath)
 	if err != nil {
 		panic(err)
 	}
@@ -30,4 +33,28 @@ func PanicIfErr[T any](val T, err error) T {
 		panic(err)
 	}
 	return val
+}
+
+func Max[T constraints.Ordered](initial T, rest ...T) T {
+	max := initial
+	for _, t := range rest {
+		if t > max {
+			max = t
+		}
+	}
+	return max
+}
+
+func MaxKeyFromMap[K constraints.Ordered, V any](dict map[K]V) K {
+	var maxKey K
+	for key := range dict {
+		maxKey = Max(maxKey, key)
+	}
+	return maxKey
+}
+
+func Reverse[T comparable](s []T) {
+	sort.SliceStable(s, func(i, j int) bool {
+		return i > j
+	})
 }
