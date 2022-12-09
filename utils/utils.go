@@ -45,6 +45,13 @@ func Max[T constraints.Ordered](initial T, rest ...T) T {
 	return max
 }
 
+func Abs[T constraints.Integer | constraints.Float](t T) T {
+	if t > 0 {
+		return t
+	}
+	return -t
+}
+
 func MaxKeyFromMap[K constraints.Ordered, V any](dict map[K]V) K {
 	var maxKey K
 	for key := range dict {
