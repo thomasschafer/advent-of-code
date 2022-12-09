@@ -7,6 +7,18 @@ import (
 	"github.com/thomasschafer/advent_of_code_2022/utils"
 )
 
+func buildTreeGrid(rows []string) [][]int {
+	grid := [][]int{}
+	for _, row := range rows {
+		gridRow := []int{}
+		for _, char := range strings.Split(row, "") {
+			gridRow = append(gridRow, utils.PanicIfErr(strconv.Atoi(char)))
+		}
+		grid = append(grid, gridRow)
+	}
+	return grid
+}
+
 func numTreesVisible(isTreeVisibleGrid [][]bool) int {
 	result := 0
 	for _, row := range isTreeVisibleGrid {
@@ -63,13 +75,6 @@ func treesVisibleFromOutsideGrid(treeGrid [][]int) int {
 
 func Part1(filePath string) int {
 	rows := utils.RowsFromFile(filePath)
-	grid := [][]int{}
-	for _, row := range rows {
-		gridRow := []int{}
-		for _, char := range strings.Split(row, "") {
-			gridRow = append(gridRow, utils.PanicIfErr(strconv.Atoi(char)))
-		}
-		grid = append(grid, gridRow)
-	}
+	grid := buildTreeGrid((rows))
 	return treesVisibleFromOutsideGrid((grid))
 }
