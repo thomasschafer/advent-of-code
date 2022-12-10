@@ -48,11 +48,35 @@ func Max[T constraints.Ordered](args ...T) T {
 	return max
 }
 
+func Min[T constraints.Ordered](args ...T) T {
+	if len(args) == 0 {
+		panic("Not enough arguments")
+	}
+	min := args[0]
+	for _, t := range args {
+		if t < min {
+			min = t
+		}
+	}
+	return min
+}
+
 func Abs[T constraints.Integer | constraints.Float](t T) T {
 	if t > 0 {
 		return t
 	}
 	return -t
+}
+
+func Sum[T constraints.Integer | constraints.Float](arr []T) T {
+	if len(arr) == 0 {
+		panic("arr should contain at least 1 element")
+	}
+	var curSum T = 0
+	for _, x := range arr {
+		curSum += x
+	}
+	return curSum
 }
 
 func MaxKeyFromMap[K constraints.Ordered, V any](dict map[K]V) K {
