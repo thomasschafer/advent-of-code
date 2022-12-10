@@ -1,4 +1,4 @@
-package day6
+package day06
 
 import (
 	"github.com/thomasschafer/advent_of_code_2022/utils"
