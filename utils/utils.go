@@ -28,16 +28,19 @@ func GetIfExists[K comparable, V any](dict map[K]V, key K) V {
 	return value
 }
 
-func PanicIfErr[T any](val T, err error) T {
+func Expect[T any](val T, err error) T {
 	if err != nil {
 		panic(err)
 	}
 	return val
 }
 
-func Max[T constraints.Ordered](initial T, rest ...T) T {
-	max := initial
-	for _, t := range rest {
+func Max[T constraints.Ordered](args ...T) T {
+	if len(args) == 0 {
+		panic("Not enough arguments")
+	}
+	max := args[0]
+	for _, t := range args {
 		if t > max {
 			max = t
 		}
@@ -64,4 +67,12 @@ func Reverse[T comparable](s []T) {
 	sort.SliceStable(s, func(i, j int) bool {
 		return i > j
 	})
+}
+
+func ArrayToSet[T comparable](array []T) map[T]bool {
+	result := make(map[T]bool)
+	for _, x := range array {
+		result[x] = true
+	}
+	return result
 }

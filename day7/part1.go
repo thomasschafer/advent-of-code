@@ -59,7 +59,7 @@ func buildDirectoryTree(rows []string) *DirectoryOrFile {
 					isDirectory := rowSplit[0] == "dir"
 					child := DirectoryOrFile{name: rowSplit[1], isDirectory: isDirectory, parent: curDir}
 					if !isDirectory {
-						child.size = utils.PanicIfErr(strconv.Atoi(rowSplit[0]))
+						child.size = utils.Expect(strconv.Atoi(rowSplit[0]))
 					}
 					curDir.children = append(curDir.children, &child)
 					fmt.Printf("ls: Added child %v to dir %v\n", child.name, curDir.name)

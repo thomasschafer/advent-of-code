@@ -71,7 +71,7 @@ func numPositionsVisited(rows []string) int {
 	for _, row := range rows {
 		rowSplit := strings.Split(row, " ")
 		direction := rowSplit[0]
-		numMoves := utils.PanicIfErr(strconv.Atoi(rowSplit[1]))
+		numMoves := utils.Expect(strconv.Atoi(rowSplit[1]))
 		for i := 1; i <= numMoves; i++ {
 			headPosition.move(direction)
 			tailPosition.follow(headPosition)

@@ -56,9 +56,9 @@ func parseStackFile(filePath string) StackInstructions {
 	for i < numRows {
 		rowSplit := strings.Split(rows[i], " ")
 		movement := Movement{
-			numToMove: utils.PanicIfErr(strconv.Atoi(rowSplit[1])),
-			from:      utils.PanicIfErr(strconv.Atoi(rowSplit[3])),
-			to:        utils.PanicIfErr(strconv.Atoi(rowSplit[5])),
+			numToMove: utils.Expect(strconv.Atoi(rowSplit[1])),
+			from:      utils.Expect(strconv.Atoi(rowSplit[3])),
+			to:        utils.Expect(strconv.Atoi(rowSplit[5])),
 		}
 		stackInstructions.instructions = append(stackInstructions.instructions, movement)
 		i++

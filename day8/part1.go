@@ -12,7 +12,7 @@ func buildTreeGrid(rows []string) [][]int {
 	for _, row := range rows {
 		gridRow := []int{}
 		for _, char := range strings.Split(row, "") {
-			gridRow = append(gridRow, utils.PanicIfErr(strconv.Atoi(char)))
+			gridRow = append(gridRow, utils.Expect(strconv.Atoi(char)))
 		}
 		grid = append(grid, gridRow)
 	}
