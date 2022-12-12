@@ -7,5 +7,5 @@ import (
 )
 
 func main() {
-	fmt.Println(day11.Part1("./data/day_11.txt"))
+	fmt.Println(day11.Part2("./data/day_11.txt"))
 }

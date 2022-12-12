@@ -14,6 +14,8 @@ type Monkey struct {
 	test      func(int) int
 }
 
+var productOfTestDivisors int
+
 func createOperation(operand1 string, operation string, operand2 string) func(int) int {
 	return func(worryLevel int) int {
 		var operand1Parsed int
@@ -30,23 +32,26 @@ func createOperation(operand1 string, operation string, operand2 string) func(in
 			operand2Parsed = utils.Expect(strconv.Atoi(operand2))
 		}
 
+		var result int
 		switch operation {
 		case "+":
-			return operand1Parsed + operand2Parsed
+			result = operand1Parsed + operand2Parsed
 		case "-":
-			return operand1Parsed - operand2Parsed
+			result = operand1Parsed - operand2Parsed
 		case "*":
-			return operand1Parsed * operand2Parsed
+			result = operand1Parsed * operand2Parsed
 		case "/":
-			return operand1Parsed / operand2Parsed
+			result = operand1Parsed / operand2Parsed
 		default:
 			panic(fmt.Sprintf("Unkown operation %v", operation))
 		}
+		return result % productOfTestDivisors
 	}
 }
 
 func parseRows(rows []string) map[int]*Monkey {
 	monkeys := make(map[int]*Monkey)
+	productOfTestDivisors = 1
 	for i := 0; i < len(rows); i++ {
 		row := rows[i]
 		if row == "" {
@@ -73,6 +78,7 @@ func parseRows(rows []string) map[int]*Monkey {
 
 			i++
 			testDivisibleBy := utils.Expect(strconv.Atoi(strings.Split(rows[i], "divisible by ")[1]))
+			productOfTestDivisors *= testDivisibleBy
 			i++
 			testThrowToIfTrue := utils.Expect(strconv.Atoi(strings.Split(rows[i], "If true: throw to monkey ")[1]))
 			i++
@@ -105,7 +111,7 @@ func productOfTopNValues[T comparable](m map[T]int, n int) int {
 	return result
 }
 
-func calculateMonkeyBusiness(monkeys map[int]*Monkey, numRounds int) int {
+func calculateMonkeyBusiness(monkeys map[int]*Monkey, numRounds int, worryLevelDivisor int) int {
 	itemsInspectedByMonkey := make(map[int]int)
 	maxMonkeyId := utils.MaxKeyFromMap(monkeys)
 	for round := 1; round <= numRounds; round++ {
@@ -116,7 +122,7 @@ func calculateMonkeyBusiness(monkeys map[int]*Monkey, numRounds int) int {
 			}
 			for _, itemWorryLevel := range monkey.items {
 				itemWorryLevel = monkey.operation(itemWorryLevel)
-				itemWorryLevel /= 3
+				itemWorryLevel /= worryLevelDivisor
 				monkeyToThrowTo := monkey.test(itemWorryLevel)
 				monkeys[monkeyToThrowTo].items = append(monkeys[monkeyToThrowTo].items, itemWorryLevel)
 				itemsInspectedByMonkey[monkeyId]++
@@ -130,5 +136,5 @@ func calculateMonkeyBusiness(monkeys map[int]*Monkey, numRounds int) int {
 func Part1(filePath string) int {
 	rows := utils.RowsFromFile(filePath)
 	monkeys := parseRows(rows)
-	return calculateMonkeyBusiness(monkeys, 20)
+	return calculateMonkeyBusiness(monkeys, 20, 3)
 }
