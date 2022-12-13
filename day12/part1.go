@@ -19,23 +19,32 @@ func (mapPosition MapPosition) toString() string {
 	return fmt.Sprintf("%v,%v", mapPosition.x, mapPosition.y)
 }
 
-const startString = "S"
-const endString = "E"
+func stringToElevation(s string) int {
+	if s == "E" {
+		s = "z"
+	} else if s == "S" {
+		s = "a"
+	}
+	return int([]rune(s)[0])
+}
 
-func characterDifference(current string, next string) int {
+func isValidNextStep(current string, next string, startString string, endString string, isValidNextElevation isValidNextElevationFunc) bool {
 	if !(len(current) == 1 && len(next) == 1) {
 		panic("Arguments should be of length 1")
 	}
-	if next == endString {
-		next = "z"
-	}
-	if current == startString {
-		current = "a"
-	}
-	return int([]rune(next)[0]) - int([]rune(current)[0])
+	currentInt := stringToElevation(current)
+	nextInt := stringToElevation(next)
+	return isValidNextElevation(currentInt, nextInt)
 }
 
-func positionsToMoveTo(position MapPosition, heightMap HeightMap, visited map[string]bool) []MapPosition {
+func positionsToMoveTo(
+	position MapPosition,
+	heightMap HeightMap,
+	visited map[string]bool,
+	startString string,
+	endString string,
+	isValidNextElevation isValidNextElevationFunc,
+) []MapPosition {
 	maxX := len(heightMap[0]) - 1
 	maxY := len(heightMap) - 1
 	possibleNewPositions := []MapPosition{}
@@ -54,7 +63,7 @@ func positionsToMoveTo(position MapPosition, heightMap HeightMap, visited map[st
 	newPositions := []MapPosition{}
 	for _, possibleNewPosition := range possibleNewPositions {
 		if !visited[possibleNewPosition.toString()] &&
-			characterDifference(heightMap[position.y][position.x], heightMap[possibleNewPosition.y][possibleNewPosition.x]) <= 1 {
+			isValidNextStep(heightMap[position.y][position.x], heightMap[possibleNewPosition.y][possibleNewPosition.x], startString, endString, isValidNextElevation) {
 			newPositions = append(newPositions, possibleNewPosition)
 		}
 	}
@@ -81,7 +90,14 @@ func parseHeightMap(rows []string) HeightMap {
 	return heightMap
 }
 
-func fewestStepsToReachEnd(heightMap HeightMap) int {
+type isValidNextElevationFunc = func(current int, next int) bool
+
+func fewestStepsToReachEnd(
+	heightMap HeightMap,
+	startString string,
+	endString string,
+	isValidNextElevation isValidNextElevationFunc,
+) int {
 	x, y := heightMap.findChar(startString)
 	initialPosition := MapPosition{x: x, y: y}
 	positions := []MapPosition{initialPosition}
@@ -90,7 +106,7 @@ func fewestStepsToReachEnd(heightMap HeightMap) int {
 	for {
 		newPositions := []MapPosition{}
 		for _, position := range positions {
-			for _, newPosition := range positionsToMoveTo(position, heightMap, visited) {
+			for _, newPosition := range positionsToMoveTo(position, heightMap, visited, startString, endString, isValidNextElevation) {
 				if heightMap[newPosition.y][newPosition.x] == endString {
 					return steps
 				} else {
@@ -107,5 +123,8 @@ func fewestStepsToReachEnd(heightMap HeightMap) int {
 func Part1(filePath string) int {
 	rows := utils.RowsFromFile(filePath)
 	heightMap := parseHeightMap(rows)
-	return fewestStepsToReachEnd(heightMap)
+	isValidNextElevation := func(current int, next int) bool {
+		return next <= current+1
+	}
+	return fewestStepsToReachEnd(heightMap, "S", "E", isValidNextElevation)
 }

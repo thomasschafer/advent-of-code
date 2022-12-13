@@ -9,4 +9,6 @@ import (
 func main() {
 	fmt.Println(day12.Part1("./data/day_12_test.txt"))
 	fmt.Println(day12.Part1("./data/day_12.txt"))
+	fmt.Println(day12.Part2("./data/day_12_test.txt"))
+	fmt.Println(day12.Part2("./data/day_12.txt"))
 }
