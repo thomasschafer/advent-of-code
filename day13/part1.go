@@ -61,59 +61,65 @@ func parseList(row string) DeepList {
 }
 
 func parseListWithCheck(row string) DeepList {
-	fmt.Println("Parsing row", row)
 	if row[0] != '[' || row[len(row)-1] != ']' {
 		panic(fmt.Sprintf("Expected row to start with [ and end with ], instead found %v", row))
 	}
 	return parseList(row[1 : len(row)-1])
 }
 
-// func compare(left DeepList, right DeepList) int {
-// 	switch left[0].(type) {
-// 	case int:
-// 		switch right[0].(type) {
-// 		case int:
-// 			if left[0].(int) < right[0].(int) {
-// 				return 1
-// 			} else if left[0].(int) > right[0].(int) {
-// 				return -1
-// 			}
-// 			left = left[1:]
-// 			right = right[1:]
-// 		default:
-// 			left = DeepList{left}
-// 		}
-// 	case DeepList:
-// 		switch right[0].(type) {
-// 		case DeepList:
-// 			firstElementsCompared := compare(left[0].(DeepList), right[0].(DeepList))
-// 			if firstElementsCompared != 0 {
-// 				return firstElementsCompared
-// 			}
-// 			left = left[1:]
-// 			right = right[1:]
-// 		case int:
-// 			right = DeepList{right}
-// 		}
-// 	}
-// 	return compare(left, right)
-// }
+func compare(left any, right any) int {
+	switch left.(type) {
+	case int:
+		switch right.(type) {
+		case int:
+			if left.(int) < right.(int) {
+				return -1
+			} else if left.(int) > right.(int) {
+				return 1
+			} else {
+				return 0
+			}
+		default:
+			left = DeepList{left}
+		}
+	case DeepList:
+		switch right.(type) {
+		case DeepList:
+			if len(left.(DeepList)) == 0 && len(right.(DeepList)) == 0 {
+				return 0
+			} else if len(left.(DeepList)) == 0 {
+				return -1
+			} else if len(right.(DeepList)) == 0 {
+				return 1
+			}
+			firstElementsCompared := compare(left.(DeepList)[0], right.(DeepList)[0])
+			if firstElementsCompared != 0 {
+				return firstElementsCompared
+			}
+			left = left.(DeepList)[1:]
+			right = right.(DeepList)[1:]
+		case int:
+			right = DeepList{right}
+		}
+	}
+	return compare(left, right)
+}
 
 func sumOfIndicesInRightOrder(rows []string) int {
 	result := 0
 	i := 0
+	pairIndex := 1
 	for i < len(rows) {
 		left := rows[i]
 		right := rows[i+1]
 		leftParsed := parseListWithCheck(left)
-		fmt.Println("leftParsed", leftParsed)
 		rightParsed := parseListWithCheck(right)
-		fmt.Println("rightParsed", rightParsed)
-		fmt.Println("--")
-		// if compare(leftParsed, rightParsed) == 1 {
-		// 	result += 1
-		// }
+		compareResult := compare(leftParsed, rightParsed)
+		if compareResult == -1 {
+			result += pairIndex
+		}
 		i += 3
+		pairIndex++
 	}
 	return result
 }
