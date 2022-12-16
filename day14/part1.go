@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/thomasschafer/advent_of_code_2022/utils"
 )
@@ -137,7 +138,7 @@ func parseCaveGrid(rows []string) CaveGrid {
 	return caveGrid
 }
 
-func unitsOfSandThatComeToRest(caveGrid *CaveGrid) int {
+func unitsOfSandThatComeToRest(caveGrid *CaveGrid, visualise bool) int {
 	result := 0
 	for {
 		currentSandPosition := SandPosition{x: sandStartPosition.x, y: sandStartPosition.y}
@@ -165,17 +166,19 @@ func unitsOfSandThatComeToRest(caveGrid *CaveGrid) int {
 				result += 1
 				sandHasSettled = true
 			}
-			// caveGrid.display()
-			// time.Sleep(10 * time.Millisecond)
+			if visualise {
+				caveGrid.display()
+				time.Sleep(10 * time.Millisecond)
+			}
 		}
 	}
 }
 
-func Part1(filePath string) int {
+func Part1(filePath string, visualise bool) int {
 	rows := utils.RowsFromFile(filePath)
 	caveGrid := parseCaveGrid(rows)
 	caveGrid.display()
-	result := unitsOfSandThatComeToRest(&caveGrid)
+	result := unitsOfSandThatComeToRest(&caveGrid, visualise)
 	caveGrid.display()
 	return result
 }
