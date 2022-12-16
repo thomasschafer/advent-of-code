@@ -2,6 +2,8 @@ package day14
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 
@@ -14,61 +16,78 @@ const (
 	ROCK       CaveElement = "#"
 	SAND       CaveElement = "o"
 	SAND_START CaveElement = "+"
+	EMPTY      CaveElement = ""
 )
 
+type SandPosition struct {
+	x int
+	y int
+}
+
 type CaveGrid struct {
-	grid [][]CaveElement
-	minX int
-	maxX int
-	minY int
-	maxY int
+	grid      [][]CaveElement
+	sandStart SandPosition
+	minX      int
+	maxX      int
+	minY      int
+	maxY      int
 }
 
-func (caveGrid *CaveGrid) set(x int, y int, setTo CaveElement) {
-	caveGrid.grid[y-caveGrid.minY][x-caveGrid.minX] = setTo
+func (caveGrid *CaveGrid) set(x int, y int, value CaveElement) {
+	caveGrid.grid[y-caveGrid.minY][x-caveGrid.minX] = value
+}
+func (caveGrid *CaveGrid) get(x int, y int) CaveElement {
+	return caveGrid.grid[y-caveGrid.minY][x-caveGrid.minX]
 }
 
-func newCaveGrid(minX int, maxX int, minY int, maxY int) CaveGrid {
+func clearScreen() {
+	cmd := exec.Command("clear")
+	cmd.Stdout = os.Stdout
+	cmd.Run()
+}
+
+func (caveGrid CaveGrid) display() {
+	result := ""
+	for i := 0; i < len(caveGrid.grid[0])+2; i++ {
+		result += "-"
+	}
+	result += "\n"
+	for _, row := range caveGrid.grid {
+		result += "|"
+		for _, c := range row {
+			if c == "" {
+				result += " "
+			} else {
+				result += string(c)
+			}
+		}
+		result += "|\n"
+	}
+	for i := 0; i < len(caveGrid.grid[0])+2; i++ {
+		result += "-"
+	}
+	clearScreen()
+	fmt.Println(result + "\n")
+}
+
+func newCaveGrid(minX int, maxX int, minY int, maxY int, sandStart SandPosition) CaveGrid {
 	grid := [][]CaveElement{}
 	width := maxX + 1 - minX
 	height := maxY + 1 - minY
 	for idx := 0; idx < height; idx++ {
 		grid = append(grid, make([]CaveElement, width))
 	}
-	caveGrid := CaveGrid{grid: grid, minX: minX, maxX: maxX, minY: minY, maxY: maxY}
+	caveGrid := CaveGrid{grid: grid, minX: minX, maxX: maxX, minY: minY, maxY: maxY, sandStart: sandStart}
 	return caveGrid
 }
 
-func (caveGrid CaveGrid) display() {
-	for i := 0; i < len(caveGrid.grid[0])+2; i++ {
-		fmt.Print("-")
-	}
-	fmt.Println()
-	for _, row := range caveGrid.grid {
-		fmt.Print("|")
-		for _, c := range row {
-			if c == "" {
-				fmt.Print(" ")
-			} else {
-				fmt.Print(c)
-			}
-		}
-		fmt.Print("|\n")
-	}
-	for i := 0; i < len(caveGrid.grid[0])+2; i++ {
-		fmt.Print("-")
-	}
-	fmt.Println()
-}
-
-const SAND_START_X = 500
-const SAND_START_Y = 0
+var sandStartPosition = SandPosition{x: 500, y: 0}
 
 func parseCaveGrid(rows []string) CaveGrid {
-	minX := SAND_START_X
-	maxX := SAND_START_X
-	minY := SAND_START_Y
-	maxY := SAND_START_Y
+	minX := sandStartPosition.x
+	maxX := sandStartPosition.x
+	minY := sandStartPosition.y
+	maxY := sandStartPosition.y
 	parsedRows := [][][]int{}
 	for _, row := range rows {
 		parsedRow := [][]int{}
@@ -86,9 +105,9 @@ func parseCaveGrid(rows []string) CaveGrid {
 		parsedRows = append(parsedRows, parsedRow)
 	}
 
-	caveGrid := newCaveGrid(minX, maxX, minY, maxY)
+	caveGrid := newCaveGrid(minX, maxX, minY, maxY, sandStartPosition)
 
-	caveGrid.set(SAND_START_X, SAND_START_Y, SAND_START)
+	caveGrid.set(sandStartPosition.x, sandStartPosition.y, SAND_START)
 
 	for _, row := range parsedRows {
 		for i := 0; i <= len(row)-2; i++ {
@@ -118,10 +137,45 @@ func parseCaveGrid(rows []string) CaveGrid {
 	return caveGrid
 }
 
+func unitsOfSandThatComeToRest(caveGrid *CaveGrid) int {
+	result := 0
+	for {
+		currentSandPosition := SandPosition{x: sandStartPosition.x, y: sandStartPosition.y}
+		sandHasSettled := false
+		for !sandHasSettled {
+			allPossibleMoves := []SandPosition{
+				{x: currentSandPosition.x, y: currentSandPosition.y + 1},
+				{x: currentSandPosition.x - 1, y: currentSandPosition.y + 1},
+				{x: currentSandPosition.x + 1, y: currentSandPosition.y + 1},
+			}
+			couldMoveSand := false
+			for _, move := range allPossibleMoves {
+				if move.y > caveGrid.maxY || move.x < caveGrid.minX || move.x > caveGrid.maxX {
+					return result
+				}
+				if caveGrid.get(move.x, move.y) == EMPTY {
+					caveGrid.set(currentSandPosition.x, currentSandPosition.y, EMPTY)
+					currentSandPosition = move
+					caveGrid.set(currentSandPosition.x, currentSandPosition.y, SAND)
+					couldMoveSand = true
+					break
+				}
+			}
+			if !couldMoveSand {
+				result += 1
+				sandHasSettled = true
+			}
+			// caveGrid.display()
+			// time.Sleep(10 * time.Millisecond)
+		}
+	}
+}
+
 func Part1(filePath string) int {
 	rows := utils.RowsFromFile(filePath)
 	caveGrid := parseCaveGrid(rows)
-	fmt.Println("caveGrid.display()")
 	caveGrid.display()
-	return len(rows)
+	result := unitsOfSandThatComeToRest(&caveGrid)
+	caveGrid.display()
+	return result
 }
