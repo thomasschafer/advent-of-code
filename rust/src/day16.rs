@@ -38,13 +38,19 @@ fn parse_valves(rows: Vec<&str>) -> HashMap<&str, Valve> {
     valves
 }
 
-fn cache_key(mins_remaining: u32, current_valve: &str, open_valves: &HashSet<&str>) -> String {
+fn cache_key(
+    mins_remaining: u32,
+    current_valve: &str,
+    open_valves: &HashSet<&str>,
+    use_elephant: bool,
+) -> String {
     let mut valves_vec = Vec::from_iter(open_valves.clone());
     valves_vec.sort();
     let res = [
         mins_remaining.to_string(),
         current_valve.to_string(),
         valves_vec.join("-").to_string(),
+        use_elephant.to_string(),
     ]
     .join(",");
     res
@@ -56,15 +62,31 @@ fn most_pressure_released_recursive(
     current_valve: &str,
     open_valves: &HashSet<&str>,
     result_cache: &mut HashMap<String, u32>,
+    use_elephant: bool,
+    original_mins_remaining: u32,
 ) -> u32 {
-    if mins_remaining == 0 {
-        return 0;
-    }
-    let current_cache_key = cache_key(mins_remaining, current_valve, open_valves);
+    let current_cache_key = cache_key(mins_remaining, current_valve, open_valves, use_elephant);
     if let Some(result) = result_cache.get(&current_cache_key) {
         return *result;
     }
-    let mut max_result = 0;
+
+    let mut max_result = if !use_elephant {
+        0
+    } else {
+        most_pressure_released_recursive(
+            valves,
+            original_mins_remaining,
+            "AA",
+            open_valves,
+            result_cache,
+            false,
+            original_mins_remaining,
+        )
+    };
+
+    if mins_remaining == 0 {
+        return max_result;
+    }
 
     if !open_valves.contains(current_valve) && valves.get(current_valve).unwrap().flow_rate > 0 {
         let mut new_open_valves = open_valves.clone();
@@ -76,6 +98,8 @@ fn most_pressure_released_recursive(
                 current_valve,
                 &new_open_valves,
                 result_cache,
+                use_elephant,
+                original_mins_remaining,
             );
         max_result = cmp::max(max_result, open_valve_result)
     }
@@ -87,6 +111,8 @@ fn most_pressure_released_recursive(
             next_valve,
             &open_valves,
             result_cache,
+            use_elephant,
+            original_mins_remaining,
         );
         max_result = cmp::max(max_result, next_valve_result);
     }
@@ -94,22 +120,40 @@ fn most_pressure_released_recursive(
     max_result
 }
 
-fn most_pressure_released(valves: &HashMap<&str, Valve>, mins: u32, current_valve: &str) -> u32 {
+fn most_pressure_released(
+    file_path: &str,
+    mins: u32,
+    current_valve: &str,
+    use_elephant: bool,
+) -> u32 {
+    let file_contents = fs::read_to_string(file_path).unwrap();
+    let rows = file_contents.split("\n").collect::<Vec<&str>>();
+    let valves = parse_valves(rows);
+
     most_pressure_released_recursive(
         &valves,
         mins,
         current_valve,
         &HashSet::new(),
         &mut HashMap::new(),
+        use_elephant,
+        mins,
     )
 }
 
 pub fn part1(file_path: &str, mins_remaining: u32) -> u32 {
-    let file_contents = fs::read_to_string(file_path).unwrap();
-    let rows = file_contents.split("\n").collect::<Vec<&str>>();
-    let valves = parse_valves(rows);
     let start_time = SystemTime::now();
-    let result = most_pressure_released(&valves, mins_remaining, "AA");
+    let result = most_pressure_released(file_path, mins_remaining, "AA", false);
+    println!(
+        "Time taken: {}",
+        (start_time.elapsed().unwrap().as_millis() as f32) / 1000.0
+    );
+    result
+}
+
+pub fn part2(file_path: &str, mins_remaining: u32) -> u32 {
+    let start_time = SystemTime::now();
+    let result = most_pressure_released(file_path, mins_remaining, "AA", true);
     println!(
         "Time taken: {}",
         (start_time.elapsed().unwrap().as_millis() as f32) / 1000.0
