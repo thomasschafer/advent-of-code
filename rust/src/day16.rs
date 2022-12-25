@@ -155,7 +155,7 @@ pub fn part2(file_path: &str, mins_remaining: u32) -> u32 {
     let start_time = SystemTime::now();
     let result = most_pressure_released(file_path, mins_remaining, "AA", true);
     println!(
-        "Time taken: {}",
+        "Time taken: {}s",
         (start_time.elapsed().unwrap().as_millis() as f32) / 1000.0
     );
     result
