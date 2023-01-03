@@ -1,20 +1,20 @@
 use regex::{Captures, Regex};
 use std::{cmp, collections::HashMap, fmt, fs, str::FromStr, time::SystemTime};
 
-#[derive(Debug)]
-struct Cost {
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+struct Materials {
     ore: u64,
     clay: u64,
     obsidian: u64,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct Blueprint {
     id: u64,
-    ore_robot_cost: Cost,
-    clay_robot_cost: Cost,
-    obsidian_robot_cost: Cost,
-    geode_robot_cost: Cost,
+    ore_robot_cost: Materials,
+    clay_robot_cost: Materials,
+    obsidian_robot_cost: Materials,
+    geode_robot_cost: Materials,
 }
 
 fn capture_get<T>(capture: &Captures, key: &str) -> T
@@ -34,22 +34,22 @@ fn parse_blueprint_from_line(line: &str) -> Blueprint {
 
     Blueprint {
         id: capture_get::<u64>(&capture, "blueprint_id"),
-        ore_robot_cost: Cost {
+        ore_robot_cost: Materials {
             ore: capture_get::<u64>(&capture, "ore_robot_cost_ore"),
             clay: 0,
             obsidian: 0,
         },
-        clay_robot_cost: Cost {
+        clay_robot_cost: Materials {
             ore: capture_get::<u64>(&capture, "clay_robot_cost_ore"),
             clay: 0,
             obsidian: 0,
         },
-        obsidian_robot_cost: Cost {
+        obsidian_robot_cost: Materials {
             ore: capture_get::<u64>(&capture, "obsidian_robot_cost_ore"),
             clay: capture_get::<u64>(&capture, "obsidian_robot_cost_clay"),
             obsidian: 0,
         },
-        geode_robot_cost: Cost {
+        geode_robot_cost: Materials {
             ore: capture_get::<u64>(&capture, "geode_robot_cost_ore"),
             clay: 0,
             obsidian: capture_get::<u64>(&capture, "geode_robot_cost_obsidian"),
@@ -70,26 +70,25 @@ fn parse_blueprints(file_path: &str) -> Vec<Blueprint> {
         .collect::<Vec<Blueprint>>()
 }
 
+fn can_afford(resources: &Materials, robot_cost: &Materials) -> bool {
+    resources.ore >= robot_cost.ore
+        && resources.clay >= robot_cost.clay
+        && resources.obsidian >= robot_cost.obsidian
+}
+
 #[derive(Debug, Eq, Hash, PartialEq)]
 struct MiningAssets {
     mins: u64,
-    ore: u64,
-    ore_robots: u64,
-    clay: u64,
-    clay_robots: u64,
-    obsidian: u64,
-    obsidian_robots: u64,
+    resources: Materials,
+    robots: Materials,
 }
 
 fn largest_num_geodes_opened_recursive(
     blueprint: &Blueprint,
     mins: u64,
-    ore: u64,
-    ore_robots: u64,
-    clay: u64,
-    clay_robots: u64,
-    obsidian: u64,
-    obsidian_robots: u64,
+    resources: &Materials,
+    robots: &Materials,
+    max_robots: &Materials,
     result_cache: &mut HashMap<MiningAssets, u64>,
 ) -> u64 {
     if mins == 0 {
@@ -97,12 +96,8 @@ fn largest_num_geodes_opened_recursive(
     }
     let cache_key = MiningAssets {
         mins,
-        ore,
-        ore_robots,
-        clay,
-        clay_robots,
-        obsidian,
-        obsidian_robots,
+        resources: resources.clone(),
+        robots: robots.clone(),
     };
 
     if let Some(result) = result_cache.get(&cache_key) {
@@ -112,118 +107,96 @@ fn largest_num_geodes_opened_recursive(
     let mut result = largest_num_geodes_opened_recursive(
         blueprint,
         mins - 1,
-        ore + ore_robots,
-        ore_robots,
-        clay + clay_robots,
-        clay_robots,
-        obsidian + obsidian_robots,
-        obsidian_robots,
+        &Materials {
+            ore: resources.ore + robots.ore,
+            clay: resources.clay + robots.clay,
+            obsidian: resources.obsidian + robots.obsidian,
+        },
+        robots,
+        max_robots,
         result_cache,
     );
 
-    if ore >= blueprint.ore_robot_cost.ore
-        && clay >= blueprint.ore_robot_cost.clay
-        && obsidian >= blueprint.ore_robot_cost.obsidian
-        && ore_robots
-            < *[
-                blueprint.ore_robot_cost.ore,
-                blueprint.clay_robot_cost.ore,
-                blueprint.obsidian_robot_cost.ore,
-                blueprint.geode_robot_cost.ore,
-            ]
-            .iter()
-            .max()
-            .unwrap()
+    if can_afford(&resources, &blueprint.ore_robot_cost) && robots.ore < max_robots.ore {
+        result = cmp::max(
+            result,
+            largest_num_geodes_opened_recursive(
+                blueprint,
+                mins - 1,
+                &Materials {
+                    ore: resources.ore - blueprint.ore_robot_cost.ore + robots.ore,
+                    clay: resources.clay - blueprint.ore_robot_cost.clay + robots.clay,
+                    obsidian: resources.obsidian - blueprint.ore_robot_cost.obsidian
+                        + robots.obsidian,
+                },
+                &Materials {
+                    ore: robots.ore + 1,
+                    ..*robots
+                },
+                max_robots,
+                result_cache,
+            ),
+        );
+    }
+    if can_afford(&resources, &blueprint.clay_robot_cost) && robots.clay < max_robots.clay {
+        result = cmp::max(
+            result,
+            largest_num_geodes_opened_recursive(
+                blueprint,
+                mins - 1,
+                &Materials {
+                    ore: resources.ore - blueprint.clay_robot_cost.ore + robots.ore,
+                    clay: resources.clay - blueprint.clay_robot_cost.clay + robots.clay,
+                    obsidian: resources.obsidian - blueprint.clay_robot_cost.obsidian
+                        + robots.obsidian,
+                },
+                &Materials {
+                    clay: robots.clay + 1,
+                    ..*robots
+                },
+                max_robots,
+                result_cache,
+            ),
+        );
+    }
+    if can_afford(&resources, &blueprint.obsidian_robot_cost)
+        && robots.obsidian < max_robots.obsidian
     {
         result = cmp::max(
             result,
             largest_num_geodes_opened_recursive(
                 blueprint,
                 mins - 1,
-                ore - blueprint.ore_robot_cost.ore + ore_robots,
-                ore_robots + 1,
-                clay - blueprint.ore_robot_cost.clay + clay_robots,
-                clay_robots,
-                obsidian - blueprint.ore_robot_cost.obsidian + obsidian_robots,
-                obsidian_robots,
+                &Materials {
+                    ore: resources.ore - blueprint.obsidian_robot_cost.ore + robots.ore,
+                    clay: resources.clay - blueprint.obsidian_robot_cost.clay + robots.clay,
+                    obsidian: resources.obsidian - blueprint.obsidian_robot_cost.obsidian
+                        + robots.obsidian,
+                },
+                &Materials {
+                    obsidian: robots.obsidian + 1,
+                    ..*robots
+                },
+                max_robots,
                 result_cache,
             ),
         );
     }
-    if ore >= blueprint.clay_robot_cost.ore
-        && clay >= blueprint.clay_robot_cost.clay
-        && obsidian >= blueprint.clay_robot_cost.obsidian
-        && clay_robots
-            < *[
-                blueprint.ore_robot_cost.clay,
-                blueprint.clay_robot_cost.clay,
-                blueprint.obsidian_robot_cost.clay,
-                blueprint.geode_robot_cost.clay,
-            ]
-            .iter()
-            .max()
-            .unwrap()
-    {
-        result = cmp::max(
-            result,
-            largest_num_geodes_opened_recursive(
-                blueprint,
-                mins - 1,
-                ore - blueprint.clay_robot_cost.ore + ore_robots,
-                ore_robots,
-                clay - blueprint.clay_robot_cost.clay + clay_robots,
-                clay_robots + 1,
-                obsidian - blueprint.clay_robot_cost.obsidian + obsidian_robots,
-                obsidian_robots,
-                result_cache,
-            ),
-        );
-    }
-    if ore >= blueprint.obsidian_robot_cost.ore
-        && clay >= blueprint.obsidian_robot_cost.clay
-        && obsidian >= blueprint.obsidian_robot_cost.obsidian
-        && obsidian_robots
-            < *[
-                blueprint.ore_robot_cost.obsidian,
-                blueprint.clay_robot_cost.obsidian,
-                blueprint.obsidian_robot_cost.obsidian,
-                blueprint.geode_robot_cost.obsidian,
-            ]
-            .iter()
-            .max()
-            .unwrap()
-    {
-        result = cmp::max(
-            result,
-            largest_num_geodes_opened_recursive(
-                blueprint,
-                mins - 1,
-                ore - blueprint.obsidian_robot_cost.ore + ore_robots,
-                ore_robots,
-                clay - blueprint.obsidian_robot_cost.clay + clay_robots,
-                clay_robots,
-                obsidian - blueprint.obsidian_robot_cost.obsidian + obsidian_robots,
-                obsidian_robots + 1,
-                result_cache,
-            ),
-        );
-    }
-    if ore >= blueprint.geode_robot_cost.ore
-        && clay >= blueprint.geode_robot_cost.clay
-        && obsidian >= blueprint.geode_robot_cost.obsidian
-    {
+    if can_afford(&resources, &blueprint.geode_robot_cost) {
         result = cmp::max(
             result,
             (mins - 1)
                 + largest_num_geodes_opened_recursive(
                     blueprint,
                     mins - 1,
-                    ore - blueprint.geode_robot_cost.ore + ore_robots,
-                    ore_robots,
-                    clay - blueprint.geode_robot_cost.clay + clay_robots,
-                    clay_robots,
-                    obsidian - blueprint.geode_robot_cost.obsidian + obsidian_robots,
-                    obsidian_robots,
+                    &Materials {
+                        ore: resources.ore - blueprint.geode_robot_cost.ore + robots.ore,
+                        clay: resources.clay - blueprint.geode_robot_cost.clay + robots.clay,
+                        obsidian: resources.obsidian - blueprint.geode_robot_cost.obsidian
+                            + robots.obsidian,
+                    },
+                    robots,
+                    max_robots,
                     result_cache,
                 ),
         );
@@ -235,7 +208,53 @@ fn largest_num_geodes_opened_recursive(
 
 fn largest_num_geodes_opened(blueprint: &Blueprint, mins: u64) -> u64 {
     let mut result_cache: HashMap<MiningAssets, u64> = HashMap::new();
-    largest_num_geodes_opened_recursive(blueprint, mins, 0, 1, 0, 0, 0, 0, &mut result_cache)
+    let resources = Materials {
+        ore: 0,
+        clay: 0,
+        obsidian: 0,
+    };
+    let robots = Materials {
+        ore: 1,
+        clay: 0,
+        obsidian: 0,
+    };
+    let max_robots = Materials {
+        ore: *[
+            blueprint.ore_robot_cost.ore,
+            blueprint.clay_robot_cost.ore,
+            blueprint.obsidian_robot_cost.ore,
+            blueprint.geode_robot_cost.ore,
+        ]
+        .iter()
+        .max()
+        .unwrap(),
+        clay: *[
+            blueprint.ore_robot_cost.clay,
+            blueprint.clay_robot_cost.clay,
+            blueprint.obsidian_robot_cost.clay,
+            blueprint.geode_robot_cost.clay,
+        ]
+        .iter()
+        .max()
+        .unwrap(),
+        obsidian: *[
+            blueprint.ore_robot_cost.obsidian,
+            blueprint.clay_robot_cost.obsidian,
+            blueprint.obsidian_robot_cost.obsidian,
+            blueprint.geode_robot_cost.obsidian,
+        ]
+        .iter()
+        .max()
+        .unwrap(),
+    };
+    largest_num_geodes_opened_recursive(
+        blueprint,
+        mins,
+        &resources,
+        &robots,
+        &max_robots,
+        &mut result_cache,
+    )
 }
 
 fn sum_of_quality_levels_of_blueprints(blueprints: Vec<Blueprint>, mins: u64) -> u64 {
@@ -245,11 +264,31 @@ fn sum_of_quality_levels_of_blueprints(blueprints: Vec<Blueprint>, mins: u64) ->
         .sum()
 }
 
+fn product_of_geodes_opened_by_blueprints(blueprints: Vec<Blueprint>, mins: u64) -> u64 {
+    blueprints
+        .iter()
+        .map(|blueprint| largest_num_geodes_opened(blueprint, mins))
+        .product()
+}
+
 pub fn part1(file_path: &str, mins: u64) -> u64 {
     let start_time = SystemTime::now();
 
     let blueprints = parse_blueprints(file_path);
     let result = sum_of_quality_levels_of_blueprints(blueprints, mins);
+
+    println!(
+        "Time taken: {}s",
+        (start_time.elapsed().unwrap().as_millis() as f32) / 1000.0
+    );
+    result
+}
+
+pub fn part2(file_path: &str, mins: u64, num_blueprints: usize) -> u64 {
+    let start_time = SystemTime::now();
+
+    let blueprints = &parse_blueprints(file_path)[..num_blueprints];
+    let result = product_of_geodes_opened_by_blueprints(blueprints.to_vec(), mins);
 
     println!(
         "Time taken: {}s",
