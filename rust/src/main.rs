@@ -1,8 +1,8 @@
-mod day19;
+mod day20;
 
 fn main() {
-    println!("Part 1 result (test data): {}", day19::part1("../data/day_19_test.txt", 24));
-    println!("Part 1 result (real data): {}", day19::part1("../data/day_19.txt", 24));
-    println!("Part 2 result (test data): {}", day19::part2("../data/day_19_test.txt", 32));
-    println!("Part 2 result (real data): {}", day19::part2("../data/day_19.txt", 32));
+    println!("Part 1 result (test data): {}", day20::part1("../data/day_20_test.txt"));
+    println!("Part 1 result (real data): {}", day20::part1("../data/day_20.txt"));
+    // println!("Part 2 result (test data): {}", day20::part2("../data/day_20_test.txt"));
+    // println!("Part 2 result (real data): {}", day20::part2("../data/day_20.txt"));
 }
