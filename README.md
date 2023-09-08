@@ -1,3 +1,3 @@
-# Advent of Code 2022 solutions
+# Advent of Code solutions
 
-This repository contains my solutions to the [Advent of Code 2022](https://adventofcode.com/2022) problems, written in Go and Rust.
+This repository contains my solutions to the [Advent of Code](https://adventofcode.com/) problems, written in Go, Rust and Haskell.
