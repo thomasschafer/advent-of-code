@@ -9,9 +9,6 @@ data BingoData = BingoData
   }
   deriving (Show)
 
-quickTrace :: Show a => a -> a
-quickTrace x = trace ("debug: " ++ show x) x
-
 splitBy :: Char -> String -> [String]
 splitBy splitChar str =
   let splitFn = (== splitChar)
@@ -36,25 +33,30 @@ parseBingoData fileData = BingoData {drawnNumbers, boards}
     drawnNumbers = map read $ splitBy ',' $ head dataLines
     boards = groupBoards $ drop 2 dataLines
 
+hasCompleteRow :: BingoBoard -> Bool
+hasCompleteRow = any (all (== 0))
+
+hasCompleteColumn :: BingoBoard -> Bool
+hasCompleteColumn [] = False
+hasCompleteColumn board = case head board of
+  [] -> False
+  _ -> firstColIsComplete || hasCompleteColumn (map tail board)
+    where
+      firstCol = map head board
+      firstColIsComplete = all (== head firstCol) firstCol
+
+isWinner :: BingoBoard -> Bool
+isWinner b = hasCompleteRow b || hasCompleteColumn b
+
 findWinner :: [BingoBoard] -> Maybe BingoBoard
 findWinner [] = Nothing
-findWinner (board : boards) =
-  if isWinner board then Just board else findWinner boards
-  where
-    hasCompleteRow = any (all (== 0))
-
-    hasCompleteColumn [] = False
-    hasCompleteColumn board = case head board of
-      [] -> False
-      _ -> firstColIsComplete || hasCompleteColumn (map tail board)
-        where
-          firstCol = map head board
-          firstColIsComplete = all (== head firstCol) firstCol
-
-    isWinner b = hasCompleteRow b || hasCompleteColumn b
+findWinner (board : boards) = if isWinner board then Just board else findWinner boards
 
 removeNum :: Int -> BingoBoard -> BingoBoard
 removeNum num = map $ map (\x -> if x == num then 0 else x)
+
+calcResult :: Int -> BingoBoard -> Int
+calcResult numCalled winningBoard = numCalled * sum (map sum winningBoard)
 
 solvePart1 :: BingoData -> Int
 solvePart1 bingoData =
@@ -62,14 +64,30 @@ solvePart1 bingoData =
       updatedBoards = map (removeNum numCalled) (boards bingoData)
    in case findWinner updatedBoards of
         Nothing -> solvePart1 $ BingoData remainder updatedBoards
-        Just winningBoard -> numCalled * sum (map sum winningBoard)
+        Just winningBoard -> calcResult numCalled winningBoard
 
-solveAndPrint :: String -> IO ()
-solveAndPrint filePath = do
+removeWinners :: [BingoBoard] -> [BingoBoard]
+removeWinners = filter (not . isWinner)
+
+solvePart2 :: BingoData -> Int
+solvePart2 bingoData = case length filteredBoards of
+  0 -> calcResult numCalled $ head updatedBoards
+  _ -> solvePart2 $ BingoData remainder filteredBoards
+  where
+    (numCalled : remainder) = drawnNumbers bingoData
+    updatedBoards = map (removeNum numCalled) (boards bingoData)
+    filteredBoards = removeWinners updatedBoards
+
+parseData :: String -> IO BingoData
+parseData filePath = do
   bingoData <- readFile filePath
-  print $ solvePart1 $ parseBingoData bingoData
+  return $ parseBingoData bingoData
 
 main :: IO ()
 main = do
-  solveAndPrint "data/day_4_test.txt"
-  solveAndPrint "data/day_4.txt"
+  testData <- parseData "data/day_4_test.txt"
+  realData <- parseData "data/day_4.txt"
+  print $ solvePart1 testData
+  print $ solvePart1 realData
+  print $ solvePart2 testData
+  print $ solvePart2 realData
