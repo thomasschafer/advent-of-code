@@ -1,0 +1,37 @@
+cradle:
+  multi:
+    - path: "./src/Main.hs"
+      config:
+        cradle:
+          stack:
+            component: "aoc-haskell:exe:aoc-haskell"
+    - path: "./src/Utils.hs"
+      config:
+        cradle:
+          stack:
+            component: "aoc-haskell:exe:aoc-haskell"
+    - path: "./src/day1.hs"
+      config:
+        cradle:
+          stack:
+            component: "aoc-haskell:exe:aoc-haskell"
+    - path: "./src/day2.hs"
+      config:
+        cradle:
+          stack:
+            component: "aoc-haskell:exe:aoc-haskell"
+    - path: "./src/day3.hs"
+      config:
+        cradle:
+          stack:
+            component: "aoc-haskell:exe:aoc-haskell"
+    - path: "./src/day4.hs"
+      config:
+        cradle:
+          stack:
+            component: "aoc-haskell:exe:aoc-haskell"
+    - path: "./src/day5.hs"
+      config:
+        cradle:
+          stack:
+            component: "aoc-haskell:exe:aoc-haskell"

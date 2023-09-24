@@ -1,5 +1,6 @@
-import Debug.Trace
-import Distribution.Simple.Setup (falseArg)
+module Day4 (day4Main) where
+
+import Utils (splitBy)
 
 type BingoBoard = [[Int]]
 
@@ -9,22 +10,13 @@ data BingoData = BingoData
   }
   deriving (Show)
 
-splitBy :: Char -> String -> [String]
-splitBy splitChar str =
-  let splitFn = (== splitChar)
-   in case dropWhile splitFn str of
-        "" -> []
-        str' -> word : splitBy splitChar remainder
-          where
-            (word, remainder) = break splitFn str'
-
 groupBoards :: [String] -> [BingoBoard]
 groupBoards = groupBoardsHelper [] []
   where
     groupBoardsHelper curBoard boards [] = boards ++ [curBoard]
-    groupBoardsHelper curBoard boards (line : lines) = case line of
-      "" -> groupBoardsHelper [] (boards ++ [curBoard]) lines
-      _ -> groupBoardsHelper (curBoard ++ [map read (words line)]) boards lines
+    groupBoardsHelper curBoard boards (line : remainingLines) = case line of
+      "" -> groupBoardsHelper [] (boards ++ [curBoard]) remainingLines
+      _ -> groupBoardsHelper (curBoard ++ [map read (words line)]) boards remainingLines
 
 parseBingoData :: String -> BingoData
 parseBingoData fileData = BingoData {drawnNumbers, boards}
@@ -83,8 +75,8 @@ parseData filePath = do
   bingoData <- readFile filePath
   return $ parseBingoData bingoData
 
-main :: IO ()
-main = do
+day4Main :: IO ()
+day4Main = do
   testData <- parseData "data/day_4_test.txt"
   realData <- parseData "data/day_4.txt"
   print $ solvePart1 testData

@@ -1,9 +1,11 @@
+module Day3 (day3Main) where
+
 import Data.List (group, sort)
 
 binaryStringToInt :: String -> Int
 binaryStringToInt = foldl (\acc x -> acc * 2 + read [x]) 0
 
-charCounts :: Ord b => [b] -> [(Int, b)]
+charCounts :: (Ord b) => [b] -> [(Int, b)]
 charCounts ns = [(length ks, head ks) | ks <- group (sort ns)]
 
 groupChars :: [String] -> [[(Int, Char)]]
@@ -63,7 +65,7 @@ solveAndPrint filePath = do
   print $ solvePart1 $ lines diagnosticData
   print $ solvePart2 $ lines diagnosticData
 
-main :: IO ()
-main = do
+day3Main :: IO ()
+day3Main = do
   solveAndPrint "data/day_3_test.txt"
   solveAndPrint "data/day_3.txt"

@@ -1,3 +1,5 @@
+module Day2 (day2Main) where
+
 data Position = Position {depth :: Int, horizontal :: Int}
 
 parseCommand :: [String] -> (String, Int)
@@ -37,8 +39,8 @@ solvePart2 commandData =
     commands = map words $ lines commandData
     PositionWithAim (Position depth horizontal) _ = foldl updatePositionPt2 (PositionWithAim (Position 0 0) 0) commands
 
-main :: IO ()
-main = do
+day2Main :: IO ()
+day2Main = do
   day2Data <- readFile "data/day_2.txt"
   print $ solvePart1 day2Data
   print $ solvePart2 day2Data

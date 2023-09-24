@@ -1,3 +1,5 @@
+module Day1 (day1Main) where
+
 numIncreasesPt1 :: [Int] -> Int
 numIncreasesPt1 depths =
   snd $ foldl incrIfGreater (Nothing, 0) depths
@@ -15,8 +17,8 @@ numIncreasesPt2 windowLength depths =
       where
         nextSum = sum $ take windowLength $ drop idx depths
 
-main :: IO ()
-main = do
+day1Main :: IO ()
+day1Main = do
   depthsData <- readFile "data/day_1.txt"
   let depths = map read $ lines depthsData
   print $ numIncreasesPt1 depths
