@@ -2,7 +2,7 @@ module Day5 (day5Main) where
 
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HashMap
-import Data.Maybe
+import Data.Maybe (fromMaybe)
 import Utils (splitBy)
 
 type Coords = (Int, Int)
@@ -23,75 +23,40 @@ parseCoords ventData shouldInclude = mapMaybe lineToCoords $ lines ventData
         allWords = words line
         coords = (wordToCoords $ head allWords, wordToCoords $ last allWords)
 
-solvePart1 :: String -> Int
-solvePart1 ventData = foldl (\acc v -> if v >= 2 then acc + 1 else acc) 0 ventCounts
+numVentCounts :: ((Coords, Coords) -> Bool) -> String -> Int
+numVentCounts shouldInclude ventData = foldl (\acc v -> if v >= 2 then acc + 1 else acc) 0 ventCounts
   where
-    coords = parseCoords ventData (\(c1, c2) -> fst c1 == fst c2 || snd c1 == snd c2)
+    updateVents :: HashMap Coords Int -> (Coords, Coords) -> HashMap Coords Int
+    updateVents numVents ((x1, y1), (x2, y2)) = newVents
+      where
+        direction = (signum (x2 - x1), signum (y2 - y1))
+        numSteps = max (abs (x2 - x1)) (abs (y2 - y1))
 
-    updateVents :: (Coords, Coords) -> HashMap Coords Int -> HashMap Coords Int
-    updateVents ((x1, y1), (x2, y2)) numVents =
-      if x1 == x2
-        then
-          let start = min y1 y2
-              end = max y1 y2
-              updateFn acc y = HashMap.insert key nextVal acc
-                where
-                  key = (x1, y)
-                  nextVal = fromMaybe 0 (HashMap.lookup key acc) + 1
-           in foldl updateFn numVents [start .. end]
-        else
-          let start = min x1 x2
-              end = max x1 x2
-              updateFn acc x = HashMap.insert key nextVal acc
-                where
-                  key = (x, y1)
-                  nextVal = fromMaybe 0 (HashMap.lookup key acc) + 1
-           in foldl updateFn numVents [start .. end]
+        updateFn :: (HashMap Coords Int, Coords) -> Int -> (HashMap Coords Int, Coords)
+        updateFn (vents, curKey) _ = (HashMap.insert curKey updatedVal vents, nextKey)
+          where
+            (xCur, yCur) = curKey
+            updatedVal = fromMaybe 0 (HashMap.lookup curKey vents) + 1
+            xNext = xCur + fst direction
+            yNext = yCur + snd direction
+            nextKey = (xNext, yNext)
 
-    calcVentCounts :: [(Coords, Coords)] -> HashMap Coords Int -> HashMap Coords Int
-    calcVentCounts [] numVents = numVents
-    calcVentCounts (coordPair : coordPairs) numVents =
-      let newNumVents = updateVents coordPair numVents
-       in calcVentCounts coordPairs newNumVents
+        (newVents, _) = foldl updateFn (numVents, (x1, y1)) [0 .. numSteps]
 
-    ventCounts = calcVentCounts coords HashMap.empty
+    coords = parseCoords ventData shouldInclude
+    ventCounts = foldl updateVents HashMap.empty coords
+
+solvePart1 :: String -> Int
+solvePart1 = numVentCounts (\(c1, c2) -> fst c1 == fst c2 || snd c1 == snd c2)
 
 solvePart2 :: String -> Int
-solvePart2 ventData = foldl (\acc v -> if v >= 2 then acc + 1 else acc) 0 ventCounts
-  where
-    coords = parseCoords ventData (\(c1, c2) -> fst c1 == fst c2 || snd c1 == snd c2)
-
-    updateVents :: (Coords, Coords) -> HashMap Coords Int -> HashMap Coords Int
-    updateVents ((x1, y1), (x2, y2)) numVents =
-      if x1 == x2
-        then
-          let start = min y1 y2
-              end = max y1 y2
-              updateFn acc y = HashMap.insert key nextVal acc
-                where
-                  key = (x1, y)
-                  nextVal = fromMaybe 0 (HashMap.lookup key acc) + 1
-           in foldl updateFn numVents [start .. end]
-        else
-          let start = min x1 x2
-              end = max x1 x2
-              updateFn acc x = HashMap.insert key nextVal acc
-                where
-                  key = (x, y1)
-                  nextVal = fromMaybe 0 (HashMap.lookup key acc) + 1
-           in foldl updateFn numVents [start .. end]
-
-    calcVentCounts :: [(Coords, Coords)] -> HashMap Coords Int -> HashMap Coords Int
-    calcVentCounts [] numVents = numVents
-    calcVentCounts (coordPair : coordPairs) numVents =
-      let newNumVents = updateVents coordPair numVents
-       in calcVentCounts coordPairs newNumVents
-
-    ventCounts = calcVentCounts coords HashMap.empty
+solvePart2 = numVentCounts (const True)
 
 day5Main :: IO ()
 day5Main = do
   testData <- readFile "data/day_5_test.txt"
-  print $ solvePart1 testData
   realData <- readFile "data/day_5.txt"
+  print $ solvePart1 testData
   print $ solvePart1 realData
+  print $ solvePart2 testData
+  print $ solvePart2 realData
