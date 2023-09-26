@@ -1,5 +1,5 @@
-import Day7 (day7Main)
+import Day8 (day8Main)
 
 main :: IO ()
 main = do
-  day7Main
+  day8Main
