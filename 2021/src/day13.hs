@@ -1,19 +1,15 @@
 module Day13 (day13Main) where
 
-import Data.Maybe (isJust)
 import Data.Set (Set)
 import Data.Set qualified as S
-import Debug.Trace (trace)
 import Utils (splitBy)
 
-printGrid :: Set (Int, Int) -> Set (Int, Int)
-printGrid coords = trace displayed coords
-  where
-    coordsList = S.toList coords
-    numRows = maximum (map snd coordsList)
-    numCols = maximum (map fst coordsList)
-    displayed =
-      ( concat
+gridToString :: Set (Int, Int) -> String
+gridToString coords =
+  let coordsList = S.toList coords
+      numRows = maximum (map snd coordsList)
+      numCols = maximum (map fst coordsList)
+   in ( concat
           [ concat
               [ if (x, y) `elem` coords then "#" else "."
                 | x <- [0 .. numCols]
@@ -49,7 +45,10 @@ applyFolds foldLimit dotData = foldl applyFold dotCoords foldsTruncated
       _ -> foldsParsed
 
 solvePart1 :: String -> Int
-solvePart1 dotData = length $ applyFolds (Just 1) dotData
+solvePart1 = length . applyFolds (Just 1)
+
+solvePart2 :: String -> String
+solvePart2 = gridToString . applyFolds Nothing
 
 day13Main :: IO ()
 day13Main = do
@@ -57,3 +56,5 @@ day13Main = do
   realData <- readFile "data/day_13.txt"
   print $ solvePart1 testData
   print $ solvePart1 realData
+  print $ solvePart2 testData
+  print $ solvePart2 realData
