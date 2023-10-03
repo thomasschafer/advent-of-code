@@ -5,19 +5,26 @@
 
 packages:
 - completed:
-    hackage: unordered-containers-0.2.19.1@sha256:9ad8972c2e913c37b1d4f0e1261517fd7a1b8c8a58077e057be69837e3dbaa00,3822
-    pantry-tree:
-      sha256: ab7c0dbe2eea20198c7f471825a4aa87e47ae8976be75d6de4ff7cf2f1258f46
-      size: 1517
-  original:
-    hackage: unordered-containers-0.2.19.1
-- completed:
     hackage: containers-0.6.7@sha256:4aad61c33b21e453e5d18a465e674898fded282f233ffd154b48acc540c89537,2655
     pantry-tree:
       sha256: d3430bcc4beafe609d6c5cd4a607549ee4ffe0eafc2ebb9c87b5e7b1b20b24d8
       size: 2902
   original:
     hackage: containers-0.6.7
+- completed:
+    hackage: pqueue-1.5.0.0@sha256:5a8df46bc74b45bde6a0364bef7977069c2bb1bc66382921a53626fbed5ac02b,3873
+    pantry-tree:
+      sha256: 67f869423b1e03b7e370d6a4af5dff377e674dfe436a9c6663d31a4fb715c5e7
+      size: 2053
+  original:
+    hackage: pqueue-1.5.0.0
+- completed:
+    hackage: unordered-containers-0.2.19.1@sha256:9ad8972c2e913c37b1d4f0e1261517fd7a1b8c8a58077e057be69837e3dbaa00,3822
+    pantry-tree:
+      sha256: ab7c0dbe2eea20198c7f471825a4aa87e47ae8976be75d6de4ff7cf2f1258f46
+      size: 1517
+  original:
+    hackage: unordered-containers-0.2.19.1
 snapshots:
 - completed:
     sha256: 8017c7970c2a8a9510c60cc70ac245d59e0c34eb932b91d37af09fe59855d854
