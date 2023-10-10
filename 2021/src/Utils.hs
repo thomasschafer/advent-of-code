@@ -1,4 +1,4 @@
-module Utils (splitBy, quickTrace) where
+module Utils (binaryStringToInt, splitBy, quickTrace) where
 
 import Debug.Trace
 
@@ -13,3 +13,6 @@ splitBy splitChar str =
 
 quickTrace :: (Show a) => [Char] -> a -> a
 quickTrace name value = trace (name ++ " " ++ show value) value
+
+binaryStringToInt :: String -> Int
+binaryStringToInt = foldl (\acc x -> acc * 2 + read [x]) 0

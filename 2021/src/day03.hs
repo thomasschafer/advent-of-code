@@ -1,9 +1,7 @@
 module Day3 (day3Main) where
 
 import Data.List (group, sort)
-
-binaryStringToInt :: String -> Int
-binaryStringToInt = foldl (\acc x -> acc * 2 + read [x]) 0
+import Utils (binaryStringToInt)
 
 charCounts :: (Ord b) => [b] -> [(Int, b)]
 charCounts ns = [(length ks, head ks) | ks <- group (sort ns)]
