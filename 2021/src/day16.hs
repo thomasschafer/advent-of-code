@@ -3,7 +3,7 @@ module Day16 (day16Main) where
 import Data.Maybe (mapMaybe)
 import Numeric (readHex)
 import Text.Printf (printf)
-import Utils (binaryStringToInt, quickTrace)
+import Utils (binaryStringToInt)
 
 hexToBinary :: String -> String
 hexToBinary = concat . mapMaybe hexCharToBin
@@ -28,34 +28,17 @@ hexToBinary = concat . mapMaybe hexCharToBin
 -- -- | 1 -> next 11 bits are number of sub-packets immediately contained
 -- -- Subpackets
 
--- data PacketData = PacketData
---   { version :: Int,
---     typeId :: Int
---   }
-
--- data OperatorData = OperatorData
---   { lengthTypeId :: Char,
---     subPackets :: [Packet]
---   }
-
--- data Packet = Literal PacketData Int | Operator PacketData OperatorData
-
--- solvePart1 :: String -> Int
--- solvePart1 _ = 1 -- todo
---   where
---     binaryString = quickTrace "bs" $ hexToBinary $ quickTrace "hs" hexString
-
 sumOfVersionNums :: Maybe Int -> Int -> String -> (Int, String)
-sumOfVersionNums numPacketsToParse acc binStr =
-  if maybe False (<= 0) numPacketsToParse || length (quickTrace "binStr" binStr) < 7
-    then (acc, "")
-    else sumOfVersionNums newNumPacketsToParse (acc + versionNum + containedSumOfVerNums) remainingPackets
+sumOfVersionNums numPacketsToParse acc binStr
+  | maybe False (<= 0) numPacketsToParse = (acc, binStr)
+  | length binStr < 7 = (acc, "")
+  | otherwise = sumOfVersionNums newNumPacketsToParse (acc + versionNum + containedSumOfVerNums) remainingPackets
   where
     newNumPacketsToParse = case numPacketsToParse of
       Just x -> Just $ x - 1
       _ -> Nothing
-    versionNum = quickTrace "versionNum" $ binaryStringToInt $ take 3 binStr
-    packetId = quickTrace "packetId" $ binaryStringToInt $ take 3 $ drop 3 binStr
+    packetId = binaryStringToInt $ take 3 $ drop 3 binStr
+    versionNum = binaryStringToInt $ take 3 binStr
     remainingBinStr = drop 6 binStr
     (containedSumOfVerNums, remainingPackets) = case packetId of
       4 -> (0, snd $ extractLiteral ("", remainingBinStr))
@@ -63,10 +46,11 @@ sumOfVersionNums numPacketsToParse acc binStr =
           extractLiteral :: (String, String) -> (String, String)
           extractLiteral (curLiteral, remainder)
             | length remainder < 5 = (curLiteral, "")
-            | head remainder == '0' = (newLiteral, "")
-            | otherwise = extractLiteral (newLiteral, drop 5 remainder)
+            | head remainder == '0' = (newLiteral, rest)
+            | otherwise = extractLiteral (newLiteral, rest)
             where
               newLiteral = curLiteral ++ take 5 remainder
+              rest = drop 5 remainder
       _ -> case lengthTypeId of
         '0' -> (contained, if not (null remainder) then error ("Expected empty remainder, found " ++ remainder) else afterSubPackets)
           where
@@ -74,7 +58,7 @@ sumOfVersionNums numPacketsToParse acc binStr =
             subPackets = take lengthOfSubPackets $ drop 15 rest
             afterSubPackets = drop (lengthOfSubPackets + 15) rest
             (contained, remainder) = sumOfVersionNums Nothing 0 subPackets
-        '1' -> (contained, afterSubPackets) -- todo
+        '1' -> (contained, afterSubPackets)
           where
             numSubPackets = binaryStringToInt $ take 11 rest
             subPacketsAndRest = drop 11 rest
@@ -87,7 +71,7 @@ sumOfVersionNums numPacketsToParse acc binStr =
 solvePart1 :: String -> Int
 solvePart1 hexString = if null remainingPackets then result else error ("Expected empty remainingPackets, found" ++ remainingPackets)
   where
-    binaryString = quickTrace "bs" $ hexToBinary $ quickTrace "hs" hexString
+    binaryString = hexToBinary hexString
     (result, remainingPackets) = sumOfVersionNums Nothing 0 binaryString
 
 day16Main :: IO ()
@@ -95,6 +79,7 @@ day16Main = do
   testDataList <- readFile "data/day_16_test.txt"
   realData <- readFile "data/day_16.txt"
   mapM_ (print . solvePart1) (lines testDataList) -- Expected: 16, 12, 23, 31
-  -- print $ solvePart1 realData
-  -- print $ solvePart2 testData
-  -- print $ solvePart2 realData
+  print $ solvePart1 realData
+
+-- print $ solvePart2 testData
+-- print $ solvePart2 realData
