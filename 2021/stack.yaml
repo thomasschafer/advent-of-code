@@ -44,6 +44,7 @@ extra-deps:
   - containers-0.6.7
   - pqueue-1.5.0.0
   - unordered-containers-0.2.19.1
+  - parsec-3.1.16.1
 
 # Override default flag values for local packages and extra-deps
 # flags: {}

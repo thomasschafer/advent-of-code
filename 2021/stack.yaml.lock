@@ -25,6 +25,13 @@ packages:
       size: 1517
   original:
     hackage: unordered-containers-0.2.19.1
+- completed:
+    hackage: parsec-3.1.16.1@sha256:5769242043b01bf759b07b7efedcb19607837ee79015fcddde34645664136aed,4691
+    pantry-tree:
+      sha256: aee875443fc603500dcfcb5bea5c116ebcb990037abcf17e8d7020e493a51476
+      size: 2698
+  original:
+    hackage: parsec-3.1.16.1
 snapshots:
 - completed:
     sha256: 8017c7970c2a8a9510c60cc70ac245d59e0c34eb932b91d37af09fe59855d854

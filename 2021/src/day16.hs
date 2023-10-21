@@ -2,8 +2,14 @@ module Day16 (day16Main) where
 
 import Data.Maybe (mapMaybe)
 import Numeric (readHex)
+import Text.Parsec (count, digit, many1, parse, string, try, (<|>))
+import Text.ParserCombinators.Parsec (Parser)
 import Text.Printf (printf)
 import Utils (binaryStringToInt)
+
+data Packet
+  = Literal {version :: Int, typeId :: Int, value :: Int}
+  | Operator {version :: Int, typeId :: Int, subPackets :: [Packet]}
 
 hexToBinary :: String -> String
 hexToBinary = concat . mapMaybe hexCharToBin
@@ -13,70 +19,46 @@ hexToBinary = concat . mapMaybe hexCharToBin
         (x, _) : _ -> Just $ printf "%04b" (x :: Int)
         _ -> Nothing
 
--- Packet header:
--- -- First three bits = packet version
--- -- Next three bits encode the packet type ID
--- May contain some extra 0s at end, to be ignored
--- If type ID is 4, then literal value (single number):
--- -- pad with leading 0s until length is a multiple of 4 bits
--- -- break into groups of 4 bits
--- -- prefix each group by 1 bit except last, prefix by 0
--- If type ID is not 4, then operator:
--- -- Packet header (as before)
--- -- Next bit is length type ID:
--- -- | 0 -> next 15 bits are a number representing total length in bits of subpackets
--- -- | 1 -> next 11 bits are number of sub-packets immediately contained
--- -- Subpackets
+-- Parsing logic copied from https://www.reddit.com/r/adventofcode/comments/rhj2hm/2021_day_16_solutions/hor1pwl
 
-extractLiteral :: (String, String) -> (String, String)
-extractLiteral (curLiteral, remainder)
-  | length remainder < 5 = (curLiteral, "")
-  | head remainder == '0' = (newLiteral, rest)
-  | otherwise = extractLiteral (newLiteral, rest)
-  where
-    newLiteral = curLiteral ++ take 5 remainder
-    rest = drop 5 remainder
+parsePacket :: Parser Packet
+parsePacket = try parseLiteral <|> parseOperator
 
-sumOfVersionNums :: Maybe Int -> Int -> String -> (Int, String)
-sumOfVersionNums numPacketsToParse acc binStr
-  | maybe False (<= 0) numPacketsToParse = (acc, binStr)
-  | length binStr < 7 = (acc, "")
-  | otherwise = sumOfVersionNums newNumPacketsToParse (acc + versionNum + containedSumOfVerNums) remainingPackets
-  where
-    newNumPacketsToParse = case numPacketsToParse of
-      Just x -> Just $ x - 1
-      _ -> Nothing
-    packetId = binaryStringToInt $ take 3 $ drop 3 binStr
-    versionNum = binaryStringToInt $ take 3 binStr
-    remainingBinStr = drop 6 binStr
-    (containedSumOfVerNums, remainingPackets) = case packetId of
-      4 -> (0, snd $ extractLiteral ("", remainingBinStr))
-      _ -> case lengthTypeId of
-        '0' -> (contained, if not (null remainder) then error ("Expected empty remainder, found " ++ remainder) else afterSubPackets)
-          where
-            lengthOfSubPackets = binaryStringToInt $ take 15 rest
-            subPackets = take lengthOfSubPackets $ drop 15 rest
-            afterSubPackets = drop (lengthOfSubPackets + 15) rest
-            (contained, remainder) = sumOfVersionNums Nothing 0 subPackets
-        '1' -> (contained, afterSubPackets)
-          where
-            numSubPackets = binaryStringToInt $ take 11 rest
-            subPacketsAndRest = drop 11 rest
-            (contained, afterSubPackets) = sumOfVersionNums (Just numSubPackets) 0 subPacketsAndRest
-        _ -> error ("expected length type ID to be 0 or 1, instead found" ++ [lengthTypeId])
-        where
-          lengthTypeId = head remainingBinStr
-          rest = tail remainingBinStr
+parseLiteral :: Parser Packet
+parseLiteral = do
+  version <- binaryStringToInt <$> count 3 digit
+  typeId <- binaryStringToInt <$> string "100"
+  value <- binaryStringToInt <$> parseLiteralNum
+  return $ Literal {version, typeId, value}
 
-solvePart1 :: String -> Int
-solvePart1 hexString = if null remainingPackets then result else error ("Expected empty remainingPackets, found" ++ remainingPackets)
-  where
-    binaryString = hexToBinary hexString
-    (result, remainingPackets) = sumOfVersionNums Nothing 0 binaryString
+parseLiteralNum :: Parser String
+parseLiteralNum = do
+  header <- digit
+  case header of
+    '1' -> do
+      groupOf4 <- count 4 digit
+      rest <- parseLiteralNum
+      return $ groupOf4 ++ rest
+    '0' -> count 4 digit
+    other -> error $ "parseLiteralNum: Expected 0 or 1, found " ++ [other]
 
--- Potential ideas:
--- 1. Return array of ints, operator performs operation
--- 2. Parse operators and values into a tree in first pass, second pass performs computation
+parseOperator :: Parser Packet
+parseOperator = do
+  version <- binaryStringToInt <$> count 3 digit
+  typeId <- binaryStringToInt <$> count 3 digit
+  lengthTypeId <- binaryStringToInt <$> count 1 digit
+  case lengthTypeId of
+    0 -> do
+      totalLenBits <- binaryStringToInt <$> count 15 digit
+      toParse <- count totalLenBits digit
+      case parse (many1 parsePacket) "Operator" toParse of
+        Right subPackets -> return $ Operator {version, typeId, subPackets}
+        Left err -> error $ show err
+    1 -> do
+      numSubPackets <- binaryStringToInt <$> count 11 digit
+      subPackets <- count numSubPackets parsePacket
+      return $ Operator {version, typeId, subPackets}
+    other -> error $ "parseOperator: Expected 0 or 1, instead found " ++ show other
 
 packetIdToOperator :: Int -> ([Int] -> Int)
 packetIdToOperator packetId = case packetId of
@@ -98,58 +80,35 @@ packetIdToOperator packetId = case packetId of
     equalTo [a, b] = if a == b then 1 else 0
     equalTo xs = error ("Expected length 2, instead found " ++ show xs)
 
-parseAndSolve :: Maybe Int -> String -> ([Int], String)
-parseAndSolve numPacketsToParse binStr
-  | maybe False (<= 0) numPacketsToParse = ([], binStr)
-  | length binStr < 7 = ([], "")
-  | otherwise = (containedResult : packetRest, remainderToParse)
-  where
-    (packetRest, remainderToParse) = parseAndSolve newNumPacketsToParse remainingPackets
-    newNumPacketsToParse = case numPacketsToParse of
-      Just x -> Just $ x - 1
-      _ -> Nothing
-    packetId = binaryStringToInt $ take 3 $ drop 3 binStr
-    remainingBinStr = drop 6 binStr
-    (containedResult, remainingPackets) = case packetId of
-      4 -> (binaryStringToInt literalStr, remaining)
-        where
-          (literalStr, remaining) = extractLiteral ("", remainingBinStr)
-      _ -> case lengthTypeId of
-        '0' ->
-          ( operator contained,
-            if not (null remainder) then error ("Expected empty remainder, found " ++ remainder) else afterSubPackets
-          )
-          where
-            lengthOfSubPackets = binaryStringToInt $ take 15 rest
-            subPackets = take lengthOfSubPackets $ drop 15 rest
-            afterSubPackets = drop (lengthOfSubPackets + 15) rest
-            (contained, remainder) = parseAndSolve Nothing subPackets
-        '1' -> (operator contained, afterSubPackets)
-          where
-            numSubPackets = binaryStringToInt $ take 11 rest
-            subPacketsAndRest = drop 11 rest
-            (contained, afterSubPackets) = parseAndSolve (Just numSubPackets) subPacketsAndRest
-        _ -> error ("expected length type ID to be 0 or 1, instead found" ++ [lengthTypeId])
-        where
-          lengthTypeId = head remainingBinStr
-          rest = tail remainingBinStr
-          operator = packetIdToOperator packetId
+versionSum :: Packet -> Int
+versionSum Literal {version} = version
+versionSum Operator {version, subPackets} = version + sum (versionSum <$> subPackets)
 
-solvePart2 :: String -> Int
-solvePart2 hexString
-  | not (null remainingPackets) = error ("Expected empty remainingPackets, found " ++ remainingPackets)
-  | length result /= 1 = error ("Expected result to have length 1, instead found " ++ show result)
-  | otherwise = head result
+applyOperators :: Packet -> Int
+applyOperators Literal {value} = value
+applyOperators Operator {typeId, subPackets} = operatorFunc $ map applyOperators subPackets
+  where
+    operatorFunc = packetIdToOperator typeId
+
+solve :: (Packet -> Int) -> String -> Int
+solve func hexString = case parse parsePacket "Parser 2" binaryString of
+  Right packet -> func packet
+  Left err -> error $ show err
   where
     binaryString = hexToBinary hexString
-    (result, remainingPackets) = parseAndSolve Nothing binaryString
+
+solvePart1 :: String -> Int
+solvePart1 = solve versionSum
+
+solvePart2 :: String -> Int
+solvePart2 = solve applyOperators
 
 day16Main :: IO ()
 day16Main = do
   testData1List <- readFile "data/day_16_test_1.txt"
   realData <- readFile "data/day_16.txt"
-  mapM_ (print . solvePart1) (lines testData1List) -- Expected: 16, 12, 23, 31
+  mapM_ (print . solvePart1) (lines testData1List)
   print $ solvePart1 realData
   testData2List <- readFile "data/day_16_test_2.txt"
-  mapM_ (print . solvePart2) (lines testData2List) -- Expected: 3, 54, 7, 9, 1, 0, 0, 1
+  mapM_ (print . solvePart2) (lines testData2List)
   print $ solvePart2 realData
