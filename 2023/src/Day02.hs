@@ -1,11 +1,11 @@
 module Day02 (day02Main) where
 
 import Data.Char (isSpace)
-import Utils (quickTrace, splitBy)
+import Utils (splitBy)
 
-data CubeSet = CubeSet {red :: Int, green :: Int, blue :: Int}
+data CubeCounts = CubeCounts {red :: Int, green :: Int, blue :: Int}
 
-addCubes :: CubeSet -> String -> CubeSet
+addCubes :: CubeCounts -> String -> CubeCounts
 addCubes acc cubeString =
   case colour of
     "red" -> acc {red = red acc + read num}
@@ -15,21 +15,40 @@ addCubes acc cubeString =
   where
     [num, colour] = splitBy ' ' cubeString
 
+parseGameRound :: String -> (Int, [CubeCounts])
+parseGameRound line = (gameId, gameCubeCounts)
+  where
+    [start, end] = splitBy ':' line
+    gameId = read . last $ splitBy ' ' start :: Int
+    toCubeCounts = foldl addCubes (CubeCounts {red = 0, green = 0, blue = 0})
+    gameCubeCounts = map (toCubeCounts . map (dropWhile isSpace) . splitBy ',') $ splitBy ';' end
+
 data GameResult = GameResult {gameId :: Int, isPossible :: Bool}
 
-part1 :: String -> Int
-part1 = sum . map gameId . filter isPossible . map parseLine . lines
+parseGameResult :: CubeCounts -> String -> GameResult
+parseGameResult maxCubes line = GameResult {gameId, isPossible = all isGamePossible gameCubeCounts}
   where
-    maxCubes = CubeSet {red = 12, green = 13, blue = 14}
+    (gameId, gameCubeCounts) = parseGameRound line
+    isGamePossible counts = all (\f -> f counts <= f maxCubes) [red, blue, green]
 
-    parseLine :: String -> GameResult
-    parseLine line = GameResult {gameId, isPossible = all isGamePossible cubeSets}
+part1 :: String -> Int
+part1 = sum . map gameId . filter isPossible . map (parseGameResult maxCubes) . lines
+  where
+    maxCubes = CubeCounts {red = 12, green = 13, blue = 14}
+
+parseCubePower :: String -> Int
+parseCubePower line = numRed * numGreen * numBlue
+  where
+    gameCubeCounts = snd $ parseGameRound line
+    updateMaxCubes acc next =
+      CubeCounts {red = calcMax red, green = calcMax green, blue = calcMax blue}
       where
-        [start, end] = splitBy ':' line
-        gameId = read . last $ splitBy ' ' start :: Int
-        toCubeSet = foldl addCubes (CubeSet {red = 0, green = 0, blue = 0})
-        cubeSets = map (toCubeSet . map (dropWhile isSpace) . splitBy ',') $ splitBy ';' end
-        isGamePossible c = red c <= red maxCubes && blue c <= blue maxCubes && green c <= green maxCubes
+        calcMax colour = maximum (map colour [acc, next])
+    CubeCounts {red = numRed, green = numGreen, blue = numBlue} =
+      foldl updateMaxCubes (CubeCounts {red = 0, green = 0, blue = 0}) gameCubeCounts
+
+part2 :: String -> Int
+part2 = sum . map parseCubePower . lines
 
 day02Main :: IO ()
 day02Main = do
@@ -37,3 +56,5 @@ day02Main = do
   realData <- readFile "data/day_2.txt"
   print $ part1 testData
   print $ part1 realData
+  print $ part2 testData
+  print $ part2 realData
