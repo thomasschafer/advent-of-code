@@ -1,4 +1,4 @@
-module Day05 (day05Main) where
+module Day05 (part1, part2) where
 
 import Data.Function (on)
 import Data.List (sortBy)
@@ -72,12 +72,3 @@ part2 :: String -> Int
 part2 = solve (foldl toSeedRanges [] . withIdx)
   where
     toSeedRanges acc (idx, num) = if odd idx then init acc ++ [(fst (last acc), num)] else acc ++ [(num, -1)]
-
-day05Main :: IO ()
-day05Main = do
-  testData <- readFile "data/day_5_test.txt"
-  realData <- readFile "data/day_5.txt"
-  print $ part1 testData
-  print $ part1 realData
-  print $ part2 testData
-  print $ part2 realData

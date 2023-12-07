@@ -1,4 +1,4 @@
-module Day01 (day01Main) where
+module Day01 (part1, part2) where
 
 part1 :: String -> Int
 part1 = sum . map (read . (\v -> [head v, last v]) . filter (`elem` ['1' .. '9'])) . lines
@@ -42,13 +42,3 @@ part2 calibrationData = sum . map firstAndLastDigit $ lines calibrationData
     findLastValidDigit s = findValidDigit (firstWordToInt . reverse) (map reverse validDigits) (reverse s)
 
     firstAndLastDigit s = read $ concatMap (\f -> (show . f) s) [findFirstValidDigit, findLastValidDigit]
-
-day01Main :: IO ()
-day01Main = do
-  testData1 <- readFile "data/day_1_test.txt"
-  testData2 <- readFile "data/day_1_test_2.txt"
-  realData <- readFile "data/day_1.txt"
-  print $ part1 testData1
-  print $ part1 realData
-  print $ part2 testData2
-  print $ part2 realData

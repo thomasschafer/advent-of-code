@@ -1,4 +1,4 @@
-module Day02 (day02Main) where
+module Day02 (part1, part2) where
 
 import Data.Char (isSpace)
 import Utils (splitBy)
@@ -49,12 +49,3 @@ parseCubePower line = numRed * numGreen * numBlue
 
 part2 :: String -> Int
 part2 = sum . map parseCubePower . lines
-
-day02Main :: IO ()
-day02Main = do
-  testData <- readFile "data/day_2_test.txt"
-  realData <- readFile "data/day_2.txt"
-  print $ part1 testData
-  print $ part1 realData
-  print $ part2 testData
-  print $ part2 realData

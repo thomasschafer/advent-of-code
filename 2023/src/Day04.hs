@@ -1,4 +1,4 @@
-module Day04 (day04Main) where
+module Day04 (part1, part2) where
 
 import Data.Set (Set)
 import Data.Set qualified as S
@@ -25,12 +25,3 @@ part2 s = sum $ foldl update initial (withIdx numMatches)
       [ if idx < i && i <= (idx + num) then x + (acc !! idx) else x
         | (i, x) <- withIdx acc
       ]
-
-day04Main :: IO ()
-day04Main = do
-  testData <- readFile "data/day_4_test.txt"
-  realData <- readFile "data/day_4.txt"
-  print $ part1 testData
-  print $ part1 realData
-  print $ part2 testData
-  print $ part2 realData

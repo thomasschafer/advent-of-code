@@ -1,4 +1,4 @@
-module Day03 (day03Main) where
+module Day03 (part1, part2) where
 
 import Data.Char (isDigit)
 import Data.HashMap.Strict (HashMap)
@@ -83,12 +83,3 @@ part2 engineSchematicData = sum . map product . filter ((== 2) . length) $ map s
               updatedMapping = foldl addIfStar symbolsMap (indicesToCheck r c numEndCol rows cols)
            in findNumsBySymbols nextRow nextCol updatedMapping
       | otherwise = findNumsBySymbols (if c + 1 == cols then r + 1 else r) ((c + 1) `mod` cols) symbolsMap
-
-day03Main :: IO ()
-day03Main = do
-  testData <- readFile "data/day_3_test.txt"
-  realData <- readFile "data/day_3.txt"
-  print $ part1 testData
-  print $ part1 realData
-  print $ part2 testData
-  print $ part2 realData

@@ -1,4 +1,4 @@
-module Day07 (day07Main) where
+module Day07 (part1, part2) where
 
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HM
@@ -82,12 +82,3 @@ toCardInt2 c = toCardInt1 c
 
 part2 :: String -> Int
 part2 = score . map actual . sortBy compareCardPair . map (toBestHandPair . parseHand toCardInt2) . lines
-
-day07Main :: IO ()
-day07Main = do
-  testData <- readFile "data/day_7_test.txt"
-  realData <- readFile "data/day_7.txt"
-  print $ part1 testData
-  print $ part1 realData
-  print $ part2 testData
-  print $ part2 realData
