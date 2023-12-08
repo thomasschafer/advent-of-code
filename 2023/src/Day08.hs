@@ -3,13 +3,11 @@ module Day08 (part1, part2) where
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HM
 import Data.Maybe (fromJust)
-import Utils (quickTrace)
 
 data Direction = L | R
-  deriving (Eq, Show)
+  deriving (Eq)
 
 data Node = Node {val :: String, left :: String, right :: String}
-  deriving (Show)
 
 parseNodes :: String -> ([Direction], HashMap String Node)
 parseNodes nodeData = (directions, nodes)
@@ -29,20 +27,15 @@ stepsToReachEnd isEnd (nextDir : rest) Node {val, left, right} nodeMapping acc =
     nextNode = fromJust $ HM.lookup (if nextDir == L then left else right) nodeMapping
 stepsToReachEnd _ [] _ _ _ = error "Found empty directions"
 
-part1 :: String -> Int
-part1 s = stepsToReachEnd (== "ZZZ") (cycle dirs) startNode nodeMapping 0
+solve :: (String -> Bool) -> (String -> Bool) -> String -> Int
+solve startPred endPred s = foldl1 lcm stepsForNodes
   where
     (dirs, nodeMapping) = parseNodes s
-    startNode = fromJust $ HM.lookup "AAA" nodeMapping
+    startNodes = HM.elems $ HM.filterWithKey (\k _ -> startPred k) nodeMapping
+    stepsForNodes = map (\n -> stepsToReachEnd endPred (cycle dirs) n nodeMapping 0) startNodes
 
-stepsForAllToReachEnd :: [Direction] -> [Node] -> HashMap String Node -> Int -> Int
-stepsForAllToReachEnd dirs nodes nodeMapping acc = foldl1 lcm steps
-  where
-    steps = quickTrace "s" $ map (\n -> stepsToReachEnd ((== 'Z') . last) dirs n nodeMapping acc) nodes
+part1 :: String -> Int
+part1 = solve (== "AAA") (== "ZZZ")
 
 part2 :: String -> Int
-part2 s = stepsForAllToReachEnd (cycle dirs) startNodes nodeMapping 0
-  where
-    (dirs, nodeMapping) = parseNodes s
-    nodesEndingInA = filter ((== 'A') . last) (HM.keys nodeMapping)
-    startNodes = map (\key -> fromJust $ HM.lookup key nodeMapping) nodesEndingInA
+part2 = solve ((== 'A') . last) ((== 'Z') . last)
