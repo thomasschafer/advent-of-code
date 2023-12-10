@@ -1,20 +1,12 @@
 module Day07 (part1, part2) where
 
-import Data.HashMap.Strict (HashMap)
-import Data.HashMap.Strict qualified as HM
 import Data.List (maximumBy, sortBy)
-import Data.Maybe (fromMaybe)
 import Data.Ord (comparing)
 import GHC.Exts (Down (Down))
-import Utils (withIdx)
+import Utils (freqCounts, withIdx)
 
 data CardHand = CardHand {cards :: [Int], bid :: Int}
   deriving (Eq, Show)
-
-freqCounts :: [Int] -> HashMap Int Int
-freqCounts = foldl update HM.empty
-  where
-    update countsMap n = HM.insert n (1 + fromMaybe 0 (HM.lookup n countsMap)) countsMap
 
 toCardInt1 :: Char -> Int
 toCardInt1 c = case c of

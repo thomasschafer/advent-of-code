@@ -1,6 +1,15 @@
-module Utils (splitBy, quickTrace, withIdx) where
+module Utils (freqCounts, splitBy, quickTrace, withIdx) where
 
+import Data.HashMap.Strict (HashMap)
+import Data.HashMap.Strict qualified as HM
+import Data.Hashable (Hashable)
+import Data.Maybe (fromMaybe)
 import Debug.Trace
+
+freqCounts :: (Hashable a) => [a] -> HashMap a Int
+freqCounts = foldl update HM.empty
+  where
+    update countsMap n = HM.insert n (1 + fromMaybe 0 (HM.lookup n countsMap)) countsMap
 
 splitBy :: Char -> String -> [String]
 splitBy splitChar str =
