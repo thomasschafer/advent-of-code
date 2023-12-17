@@ -7,12 +7,13 @@ build-type:          Simple
 executable aoc2023
   hs-source-dirs:      src
   main-is:             Main.hs
-  other-modules:       Utils, Day16
+  other-modules:       Utils, Day17
   default-extensions:  NamedFieldPuns, ImportQualifiedPost, TupleSections
   default-language:    Haskell2010
   build-depends:       base >= 4.7 && < 5
                        , containers >= 0.6.7
                        , hashable >= 1.4.3.0
+                       , pqueue >= 1.5.0.0
                        , split >= 0.2.3.4
                        , unordered-containers >= 0.2.19.1
   ghc-options:         -Wall
