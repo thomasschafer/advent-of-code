@@ -1,4 +1,4 @@
-module Utils (freqCounts, splitBy, quickTrace, withIdx) where
+module Utils (freqCounts, hexStringToInt, splitBy, quickTrace, withIdx) where
 
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HM
@@ -25,3 +25,14 @@ withIdx l = zip [0 .. length l] l
 
 quickTrace :: (Show a) => [Char] -> a -> a
 quickTrace name value = trace (name ++ " " ++ show value) value
+
+hexStringToInt :: String -> Int
+hexStringToInt = foldl (\acc x -> acc * 16 + toNum x) 0
+  where
+    toNum 'a' = 10
+    toNum 'b' = 11
+    toNum 'c' = 12
+    toNum 'd' = 13
+    toNum 'e' = 14
+    toNum 'f' = 15
+    toNum x = read [x]
