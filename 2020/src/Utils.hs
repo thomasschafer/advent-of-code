@@ -1,15 +1,6 @@
-module Utils (splitBy, quickTrace, withIdx) where
+module Utils (quickTrace, withIdx) where
 
 import Debug.Trace
-
-splitBy :: Char -> String -> [String]
-splitBy splitChar str =
-  let splitFn = (== splitChar)
-   in case dropWhile splitFn str of
-        "" -> []
-        str' -> word : splitBy splitChar remainder
-          where
-            (word, remainder) = break splitFn str'
 
 withIdx :: [b] -> [(Int, b)]
 withIdx l = zip [0 .. length l] l
