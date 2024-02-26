@@ -5,18 +5,12 @@ import Data.HashMap.Strict qualified as HM
 import Data.List.Split (splitOn)
 import Data.Maybe (fromMaybe)
 import Data.Set qualified as S
-import Data.Tuple (swap)
 
-parseEdges :: String -> [(String, String)]
+parseEdges :: String -> [(String, (Int, String))]
 parseEdges s = case splitOn " bags contain" s of
   [_, " no other bags."] -> []
-  [color, rest] -> map ((\(_ : col) -> (color, unwords col)) . take 3 . words) $ splitOn ", " rest
+  [color, rest] -> map ((\(numStr : col) -> (color, (read numStr, unwords col))) . take 3 . words) $ splitOn ", " rest
   patt -> error $ "Unexpected pattern" ++ show patt
-
-buildMap :: [(String, String)] -> HashMap String [String]
-buildMap = foldl update HM.empty
-  where
-    update m (from, to) = HM.insert from (to : fromMaybe [] (HM.lookup from m)) m
 
 bagsFrom :: HashMap String [String] -> String -> Int
 bagsFrom colourMap = subtract 1 . length . bagsFrom' S.empty
@@ -26,7 +20,20 @@ bagsFrom colourMap = subtract 1 . length . bagsFrom' S.empty
       | otherwise = foldl bagsFrom' (S.insert cur visited) . fromMaybe [] $ HM.lookup cur colourMap
 
 part1 :: String -> Int
-part1 = flip bagsFrom "shiny gold" . buildMap . map swap . concatMap parseEdges . lines
+part1 = flip bagsFrom "shiny gold" . buildMap . map reverseDirection . concatMap parseEdges . lines
+  where
+    reverseDirection (from, (_, to)) = (to, from)
+    updateMap m (from, to) = HM.insert from (to : fromMaybe [] (HM.lookup from m)) m
+    buildMap = foldl updateMap HM.empty
+
+bagsContained :: HashMap String [(Int, String)] -> String -> Int
+bagsContained colourMap =
+  sum
+    . maybe [] (map (\(num, colour) -> num * (1 + bagsContained colourMap colour)))
+    . flip HM.lookup colourMap
 
 part2 :: String -> Int
-part2 = const 2
+part2 = flip bagsContained "shiny gold" . buildMap . concatMap parseEdges . lines
+  where
+    updateMap m (from, to) = HM.insert from (to : fromMaybe [] (HM.lookup from m)) m
+    buildMap = foldl updateMap HM.empty
