@@ -7,7 +7,7 @@ build-type:          Simple
 executable aoc2020
   hs-source-dirs:      src
   main-is:             Main.hs
-  other-modules:       Utils, Day01, Day09
+  other-modules:       Utils, Day10
   default-extensions:  NamedFieldPuns, ImportQualifiedPost, TupleSections
   default-language:    Haskell2010
   build-depends:       base >= 4.7 && < 5
