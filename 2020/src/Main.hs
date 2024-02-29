@@ -6,5 +6,5 @@ main = do
   realData <- readFile "data/day_9.txt"
   print $ part1 5 testData
   print $ part1 25 realData
-  print $ part2 testData
-  print $ part2 realData
+  print $ part2 5 testData
+  print $ part2 25 realData
