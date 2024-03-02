@@ -15,5 +15,23 @@ countProduct xs toCount = product . countsOfList toCount $ diffs extendedNums
 part1 :: String -> Int
 part1 = flip countProduct [1, 3] . map read . lines
 
+data ArrangementRes = ArrangementRes {num :: Int, arrangements :: Int}
+  deriving (Show)
+
+distinctArrangements :: [Int] -> Int
+distinctArrangements =
+  arrangements
+    . head -- result is in reverse order
+    . foldl calcNextArrangement [ArrangementRes {num = 0, arrangements = 1}]
+    . sort
+  where
+    calcNextArrangement arrs next = nextResult : take 3 arrs -- only three elements can be within 3 of the current
+      where
+        nextResult =
+          ArrangementRes
+            { num = next,
+              arrangements = sum . map arrangements $ filter ((>= next - 3) . num) arrs
+            }
+
 part2 :: String -> Int
-part2 = const 2
+part2 = distinctArrangements . map read . lines
