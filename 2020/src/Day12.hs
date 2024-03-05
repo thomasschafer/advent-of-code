@@ -26,8 +26,14 @@ parseInstruction (instrType : num) = instruction $ read num
       'R' -> Right
       'F' -> Forward
 
-updatePos :: ((Float, Float), Float) -> Instruction -> ((Float, Float), Float)
-updatePos ((north, east), angle) instr = case instr of
+manhattanDist :: (Num a) => (a, a) -> a
+manhattanDist = uncurry (+) . join (***) abs
+
+solve :: (RealFrac a, Integral c) => (((a, a), b) -> Instruction -> ((a, a), b)) -> ((a, a), b) -> String -> c
+solve update initial = round . manhattanDist . fst . foldl update initial . map parseInstruction . lines
+
+updatePos1 :: ((Float, Float), Float) -> Instruction -> ((Float, Float), Float)
+updatePos1 ((north, east), angle) instr = case instr of
   South dist -> ((north - fromIntegral dist, east), angle)
   North dist -> ((north + fromIntegral dist, east), angle)
   East dist -> ((north, east + fromIntegral dist), angle)
@@ -40,11 +46,26 @@ updatePos ((north, east), angle) instr = case instr of
       dn = fromIntegral dist * cos radians
       de = fromIntegral dist * sin radians
 
-manhattanDist :: (Num a) => (a, a) -> a
-manhattanDist = uncurry (+) . join (***) abs
-
 part1 :: String -> Int
-part1 = round . manhattanDist . fst . foldl updatePos ((0, 0), 90) . map parseInstruction . lines
+part1 = solve updatePos1 ((0, 0), 90)
+
+updateWaypoint :: Int -> (Float, Float) -> (Float, Float)
+updateWaypoint angleClockwise (north, east) =
+  ( north * cos radians - east * sin radians,
+    east * cos radians + north * sin radians
+  )
+  where
+    radians = fromIntegral angleClockwise * pi / 180
+
+updatePos2 :: ((Float, Float), (Float, Float)) -> Instruction -> ((Float, Float), (Float, Float))
+updatePos2 (ship@(sn, se), waypoint@(wn, we)) instr = case instr of
+  South dist -> (ship, (wn - fromIntegral dist, we))
+  North dist -> (ship, (wn + fromIntegral dist, we))
+  East dist -> (ship, (wn, we + fromIntegral dist))
+  West dist -> (ship, (wn, we - fromIntegral dist))
+  Left angle -> (ship, updateWaypoint (-angle) waypoint)
+  Right angle -> (ship, updateWaypoint angle waypoint)
+  Forward dist -> ((sn + fromIntegral dist * wn, se + fromIntegral dist * we), waypoint)
 
 part2 :: String -> Int
-part2 = const 2
+part2 = solve updatePos2 ((0, 0), (1, 10))
