@@ -1,4 +1,4 @@
-module Utils (mapFst, quickTrace, withIdx) where
+module Utils (lpad, quickTrace, withIdx) where
 
 import Debug.Trace
 
@@ -8,5 +8,7 @@ withIdx l = zip [0 .. length l] l
 quickTrace :: (Show a) => [Char] -> a -> a
 quickTrace name value = trace (name ++ " " ++ show value) value
 
-mapFst :: (a -> c) -> (a, b) -> (c, b)
-mapFst f (x, y) = (f x, y)
+lpad :: a -> Int -> [a] -> [a]
+lpad val n xs = replicate (n - length ys) val ++ ys
+  where
+    ys = take n xs

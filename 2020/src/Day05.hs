@@ -1,11 +1,10 @@
 module Day05 (part1, part2) where
 
-import Control.Arrow ((***))
+import Control.Arrow (Arrow (first), (***))
 import Control.Monad (join)
 import Data.Foldable (find)
 import Data.List (sort)
 import Data.Maybe (fromJust)
-import Utils (mapFst)
 
 toNum :: String -> Int
 toNum = foldl update 0
@@ -13,7 +12,7 @@ toNum = foldl update 0
     update acc next = 2 * acc + if next `elem` ['R', 'B'] then 1 else 0
 
 seatId :: String -> Int
-seatId = uncurry (+) . mapFst (* 8) . join (***) toNum . splitAt 7
+seatId = uncurry (+) . first (* 8) . join (***) toNum . splitAt 7
 
 part1 :: String -> Int
 part1 = maximum . map seatId . lines
