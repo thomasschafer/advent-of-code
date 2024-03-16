@@ -1,15 +1,14 @@
 module Day14 (part1, part2) where
 
-import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HM
 import Data.List.Split (splitOn)
+import Data.Maybe (fromMaybe)
 import Utils (lpad)
 
 data Bit = Zero | One
-  deriving (Eq, Show)
+  deriving (Eq)
 
 data Instruction = Mask [Maybe Bit] | Write {address :: Int, value :: Int}
-  deriving (Show)
 
 toBit :: Int -> Bit
 toBit 0 = Zero
@@ -38,15 +37,6 @@ applyMask mask = fromBits . zipWith applyMask' mask . toBits
     applyMask' Nothing bit = bit
     applyMask' (Just x) _ = x
 
-runProgram :: [Instruction] -> HashMap Int Int
-runProgram = fst . foldl applyInstruction (HM.empty, replicate 36 Nothing)
-  where
-    applyInstruction (memory, _) (Mask newMask) = (memory, newMask)
-    applyInstruction (memory, mask) (Write {address, value}) =
-      ( HM.insert address (applyMask mask value) memory,
-        mask
-      )
-
 parseInstr :: String -> Instruction
 parseInstr s = case splitOn " = " s of
   ["mask", vals] -> Mask $ map parseBit vals
@@ -57,8 +47,36 @@ parseInstr s = case splitOn " = " s of
     parseBit '1' = Just One
     parseBit 'X' = Nothing
 
+solve :: Maybe ([Maybe Bit] -> Int -> [Int]) -> Maybe ([Maybe Bit] -> Int -> Int) -> String -> Int -- todo refactor applyMask type
+solve addressApplyMask valueApplyMask = sum . runProgram . map parseInstr . lines
+  where
+    addressApplyMask' = fromMaybe (const (: [])) addressApplyMask
+    valueApplyMask' = fromMaybe (const id) valueApplyMask
+    runProgram = fst . foldl applyInstruction (HM.empty, replicate 36 Nothing)
+      where
+        applyInstruction (memory, _) (Mask newMask) = (memory, newMask)
+        applyInstruction (memory, mask) (Write {address, value}) =
+          ( foldr
+              (`HM.insert` valueApplyMask' mask value)
+              memory
+              (addressApplyMask' mask address),
+            mask
+          )
+
 part1 :: String -> Int
-part1 = sum . runProgram . map parseInstr . lines
+part1 = solve Nothing (Just applyMask)
+
+applyMaskWithFloat :: [Maybe Bit] -> Int -> [Int]
+applyMaskWithFloat mask = map (fromBits . reverse) . applyMaskWithFloat' [[]] . zip mask . toBits
+  where
+    applyMaskWithFloat' acc [] = acc
+    applyMaskWithFloat' acc (bitPair : rest) =
+      applyMaskWithFloat' [x : bits | bits <- acc, x <- possibleValues bitPair] rest
+      where
+        possibleValues b = case b of
+          (Just Zero, bit) -> [bit]
+          (Just One, _) -> [One]
+          (Nothing, _) -> [Zero, One]
 
 part2 :: String -> Int
-part2 = const 2
+part2 = solve (Just applyMaskWithFloat) Nothing
