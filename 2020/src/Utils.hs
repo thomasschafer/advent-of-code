@@ -1,8 +1,8 @@
-module Utils (lpad, mapTuple, quickTrace, withIdx) where
+module Utils ((...), lpad, mapTuple, quickTrace, withIdx) where
 
 import Control.Arrow ((***))
 import Control.Monad (join)
-import Debug.Trace
+import Debug.Trace (trace)
 
 withIdx :: [b] -> [(Int, b)]
 withIdx l = zip [0 .. length l] l
@@ -12,8 +12,12 @@ quickTrace name value = trace (name ++ " " ++ show value) value
 
 lpad :: a -> Int -> [a] -> [a]
 lpad val n xs = replicate (n - length ys) val ++ ys
-  where
-    ys = take n xs
+ where
+  ys = take n xs
 
 mapTuple :: (a -> b) -> (a, a) -> (b, b)
 mapTuple = join (***)
+
+infixr 8 ...
+(...) :: (b -> c) -> (a1 -> a2 -> b) -> a1 -> a2 -> c
+f ... g = (f .) . g
