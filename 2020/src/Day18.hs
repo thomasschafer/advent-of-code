@@ -15,11 +15,15 @@ data Expr
   | Mult Expr Expr
   deriving (Show)
 
-expr :: Parser Expr
-expr = buildExpressionParser table term
+expr :: Bool -> Parser Expr
+expr samePrecedence = buildExpressionParser table term
  where
-  term = parens lexer expr <|> fmap Val (integer lexer)
-  table = [[binary "*" Mult AssocLeft, binary "+" Add AssocLeft]]
+  term = parens lexer (expr samePrecedence) <|> fmap Val (integer lexer)
+  table =
+    (if samePrecedence then (: []) . concat else id)
+      [ [binary "+" Add AssocLeft]
+      , [binary "*" Mult AssocLeft]
+      ]
 
 lexer :: TokenParser ()
 lexer = makeTokenParser $ emptyDef{reservedOpNames = ["+", "*"]}
@@ -27,8 +31,8 @@ lexer = makeTokenParser $ emptyDef{reservedOpNames = ["+", "*"]}
 binary :: String -> (a -> a -> a) -> Assoc -> Operator String () Identity a
 binary name fun = Infix (reservedOp lexer name $> fun)
 
-parseExpression :: String -> Either ParseError Expr
-parseExpression = parse (expr <* eof) ""
+parseExpression :: Bool -> String -> Either ParseError Expr
+parseExpression samePrecedence = parse (expr samePrecedence <* eof) ""
 
 calc :: Either ParseError Expr -> Integer
 calc (Left err) = error $ show err
@@ -38,8 +42,11 @@ calc (Right expression) = calc' expression
   calc' (Add x y) = calc' x + calc' y
   calc' (Mult x y) = calc' x * calc' y
 
+solve :: Bool -> String -> Integer
+solve samePrecedence = sum . map (calc . parseExpression samePrecedence) . lines
+
 part1 :: String -> Integer
-part1 = sum . map (calc . parseExpression) . lines
+part1 = solve True
 
 part2 :: String -> Integer
-part2 = const 2
+part2 = solve False
