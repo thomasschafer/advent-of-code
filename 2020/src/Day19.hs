@@ -15,8 +15,8 @@ data Rule
   | Or [Rule]
   deriving (Show)
 
-parse :: String -> (HashMap Int Rule, [String])
-parse = first parseRulesMap . toTuple . map lines . splitOn "\n\n"
+parse :: [String] -> String -> (HashMap Int Rule, [String])
+parse rulesToAdd = first (parseRulesMap . (++ rulesToAdd)) . toTuple . map lines . splitOn "\n\n"
  where
   parseRulesMap = HM.fromList . map (bimap read (parseRules . words) . toTuple . splitOn ": ")
 
@@ -28,7 +28,8 @@ parse = first parseRulesMap . toTuple . map lines . splitOn "\n\n"
 satisfiesRule :: HashMap Int Rule -> Rule -> String -> Bool
 satisfiesRule rulesMap = ([] `elem`) ... satisfiesRule'
  where
-  -- return value of satisfiesRule' is a list of the results of successful matching
+  -- The return value of satisfiesRule' is a list of the remaining strings after successfully matching some
+  -- amount of the input. An empty list means matching was impossible.
   satisfiesRule' (Val c) s = [tail s | not (null s) && head s == c]
   satisfiesRule' (Or rules) s = concatMap (`satisfiesRule'` s) rules
   satisfiesRule' (List []) s = [s]
@@ -37,10 +38,17 @@ satisfiesRule rulesMap = ([] `elem`) ... satisfiesRule'
       satisfiesRule' rule s
   satisfiesRule' (Other ruleNum) s = (`satisfiesRule'` s) . fromJust $ HM.lookup ruleNum rulesMap
 
-part1 :: String -> Int
-part1 s = length $ filter (satisfiesRule rulesMap . fromJust $ HM.lookup 0 rulesMap) strs
+solve :: [String] -> String -> Int
+solve rulesToAdd s = length $ filter (satisfiesRule rulesMap . fromJust $ HM.lookup 0 rulesMap) strs
  where
-  (rulesMap, strs) = parse s
+  (rulesMap, strs) = parse rulesToAdd s
+
+part1 :: String -> Int
+part1 = solve []
 
 part2 :: String -> Int
-part2 = const 2
+part2 =
+  solve
+    [ "8: 42 | 42 8"
+    , "11: 42 31 | 42 11 31"
+    ]
