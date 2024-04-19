@@ -70,11 +70,49 @@ combine = combineLayouts . map (map $ trimLayout . snd)
   combineLayouts :: [[Layout]] -> [String]
   combineLayouts = concatMap (\r -> [concat [l !! idx | l <- r] | idx <- [0 .. length (head r) - 1]])
 
+seaMonsterCoords :: [(Int, Int)]
+seaMonsterCoords =
+  [ (r, c)
+  | r <- [0 .. length seaMonsterPattern - 1]
+  , c <- [0 .. length (head seaMonsterPattern) - 1]
+  , seaMonsterPattern !! r !! c == '#'
+  ]
+ where
+  seaMonsterPattern =
+    [ "                  # "
+    , "#    ##    ##    ###"
+    , " #  #  #  #  #  #   "
+    ]
+
 removeSeaMonsters :: [String] -> [String]
-removeSeaMonsters = id
+removeSeaMonsters original = removeSeaMonsters' (0, 0) original
+ where
+  rows = length original
+  cols = length $ head original
+
+  removeSeaMonsters' :: (Int, Int) -> [String] -> [String]
+  removeSeaMonsters' (r, c) layout
+    | r >= rows - 1 = layout
+    | otherwise = removeSeaMonsters' updatedCoords (if monsterAtCoords then layoutRemovedMonster else layout)
+   where
+    updatedCoords = if c >= cols then (r + 1, 0) else (r, c + 1)
+
+    monsterAtCoords = flip all seaMonsterCoords $
+      \(dr, dc) ->
+        let newR = r + dr; newC = c + dc
+         in newR < rows && newC < cols && layout !! newR !! newC == '#'
+
+    layoutRemovedMonster =
+      [ [ if (r', c') `elem` monsterCoords then ' ' else layout !! r' !! c'
+        | c' <- [0 .. cols - 1]
+        ]
+      | r' <- [0 .. rows - 1]
+      ]
+     where
+      monsterCoords = [(r + dr, c + dc) | (dr, dc) <- seaMonsterCoords]
 
 seaRoughness :: [String] -> Int
 seaRoughness = length . filter (== '#') . concat . removeSeaMonsters
 
 part2 :: String -> Int
-part2 = minimum . map seaRoughness . take 4 . iterate rotate . combine . findLayout . parse
+part2 = minimum . quickTrace "fs" . map seaRoughness . orientations . combine . findLayout . parse
