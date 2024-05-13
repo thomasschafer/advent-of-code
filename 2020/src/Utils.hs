@@ -1,4 +1,4 @@
-module Utils ((...), lpad, mapTuple, quickTrace, setAt2d, setAt3d, toTuple, withIdx) where
+module Utils ((...), lpad, mapTuple, quickTrace, setAt2d, setAt3d, toInt, toTuple, withIdx) where
 
 import Control.Arrow ((***))
 import Control.Monad (join)
@@ -30,3 +30,6 @@ setAt2d idx x xs = take idx xs ++ [x] ++ drop (idx + 1) xs
 
 setAt3d :: (Int, Int) -> a -> [[a]] -> [[a]]
 setAt3d (r, c) x matrix = setAt2d r (setAt2d c x $ matrix !! r) matrix
+
+toInt :: Char -> Int
+toInt = read . (: [])
