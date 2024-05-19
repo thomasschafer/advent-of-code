@@ -7,13 +7,14 @@ executable aoc2020
   hs-source-dirs:     src
   main-is:            Main.hs
   other-modules:
-    Day23
+    Day24
     Utils
 
   default-extensions:
     ImportQualifiedPost
     NamedFieldPuns
     TupleSections
+    LambdaCase
 
   default-language:   Haskell2010
   build-depends:
