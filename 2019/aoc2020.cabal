@@ -1,0 +1,31 @@
+cabal-version: 2.2
+name:          aoc2020
+version:       0.1.0.0
+build-type:    Simple
+
+executable aoc2020
+  hs-source-dirs:     src
+  main-is:            Main.hs
+  other-modules:
+    Day01
+    Utils
+
+  default-extensions:
+    ImportQualifiedPost
+    LambdaCase
+    NamedFieldPuns
+    TupleSections
+
+  default-language:   Haskell2010
+  build-depends:
+    , base                  >=4.7      && <5
+    , containers            >=0.6.7
+    , parsec                >=3.1.17.0
+    , split                 >=0.2.3.4
+    , unordered-containers  >=0.2.19.1
+    , vector                >=0.13.1.0
+
+  ghc-options:
+    -Wall -Wcompat -Widentities -Wincomplete-record-updates
+    -Wincomplete-uni-patterns -Wmissing-export-lists
+    -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
