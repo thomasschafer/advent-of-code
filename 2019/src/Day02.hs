@@ -5,20 +5,33 @@ import Data.List.Split (splitOn)
 updateAt :: Int -> a -> [a] -> [a]
 updateAt idx newVal xs = take idx xs ++ [newVal] ++ drop (idx + 1) xs
 
-solve :: Int -> [Int] -> [Int]
-solve curIdx opCodes = case drop curIdx opCodes of
+runProgram :: Int -> [Int] -> [Int]
+runProgram curIdx opCodes = case drop curIdx opCodes of
   (99 : _) -> opCodes
   (opNum : val1 : val2 : writePos : _) ->
-    solve (curIdx + 4) (updateAt writePos (op (opCodes !! val1) (opCodes !! val2)) opCodes)
-   where
-    op = case opNum of
-      1 -> (+)
-      2 -> (*)
+    runProgram (curIdx + 4) (updateAt writePos (op (opCodes !! val1) (opCodes !! val2)) opCodes)
+    where
+      op = case opNum of
+        1 -> (+)
+        2 -> (*)
+
+solve :: (Int, Int) -> [Int] -> Int
+solve (noun, verb) = head . runProgram 0 . restoreProgram
+  where
+    restoreProgram = updateAt 2 verb . updateAt 1 noun
+
+parse = map read . splitOn ","
 
 part1 :: String -> Int
-part1 = head . solve 0 . restoreProgram . map read . splitOn ","
- where
-  restoreProgram = updateAt 2 2 . updateAt 1 12
+part1 = solve (12, 2) . parse
 
 part2 :: String -> Int
-part2 = const 2
+part2 s =
+  head
+    [ 100 * noun + verb
+      | noun <- [0 .. 99],
+        verb <- [0 .. 99],
+        solve (noun, verb) opCodes == 19690720
+    ]
+  where
+    opCodes = parse s
