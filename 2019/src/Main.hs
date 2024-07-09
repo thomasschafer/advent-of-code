@@ -8,6 +8,6 @@ main = do
   print $ part1 testData
   print $ part1 testData2
   print $ part1 realData
-  -- print $ part2 testData
-  -- print $ part2 realData
-  return ()
+  print $ part2 testData
+  print $ part2 testData2
+  print $ part2 realData
