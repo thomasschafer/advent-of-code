@@ -1,9 +1,7 @@
 module Day02 (part1, part2) where
 
 import Data.List.Split (splitOn)
-
-updateAt :: Int -> a -> [a] -> [a]
-updateAt idx newVal xs = take idx xs ++ [newVal] ++ drop (idx + 1) xs
+import Utils (updateAt)
 
 runProgram :: Int -> [Int] -> [Int]
 runProgram curIdx opCodes = case drop curIdx opCodes of
@@ -20,6 +18,7 @@ solve (noun, verb) = head . runProgram 0 . restoreProgram
   where
     restoreProgram = updateAt 2 verb . updateAt 1 noun
 
+parse :: (Read a) => String -> [a]
 parse = map read . splitOn ","
 
 part1 :: String -> Int
