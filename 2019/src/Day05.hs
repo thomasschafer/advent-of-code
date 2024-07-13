@@ -1,10 +1,9 @@
-module Day05 (part1, part1_day2_test, part1_day2_real, part2) where
+module Day05 (part1, part2) where
 
 import Data.List.Split (splitOn)
-import Utils (lpad, quickTrace, toInt, updateAt)
+import Utils (lpad, toInt, updateAt)
 
 data Mode = Position | Immediate
-  deriving (Show) -- TODO: delete
 
 toMode :: Int -> Mode
 toMode 0 = Position
@@ -12,22 +11,34 @@ toMode 1 = Immediate
 
 runProgram :: [Int] -> [Int] -> Int -> [Int] -> ([Int], [Int]) -- (opCodes, outputs)
 runProgram inputs outputs curIdx opCodes
-  -- TODO: do something with inputs and outputs
   | opCode == 99 = (opCodes, outputs)
   | opCode `elem` [1, 2] =
       let op = case opCode of
             1 -> (+)
             2 -> (*)
           paramsZipped = zip modes $ take 3 rest
-          (_, writePos) = last paramsZipped
+          (_, writeIdx) = last paramsZipped
           [p1, p2] = map (uncurry toParam) $ init paramsZipped
-       in runProgram inputs outputs (curIdx + 4) (updateAt writePos (p2 `op` p1) opCodes)
+       in runProgram inputs outputs (curIdx + 4) (updateAt writeIdx (p2 `op` p1) opCodes)
   | opCode == 3 =
-      let writePos = head rest
-       in runProgram (tail inputs) outputs (curIdx + 2) (updateAt writePos (head inputs) opCodes)
+      let writeIdx = head rest
+       in runProgram (tail inputs) outputs (curIdx + 2) (updateAt writeIdx (head inputs) opCodes)
   | opCode == 4 =
-      let output = head $ zipWith toParam head rest
+      let output = head $ zipWith toParam modes rest
        in runProgram inputs (output : outputs) (curIdx + 2) opCodes
+  | opCode `elem` [5, 6] =
+      let (param1 : param2 : _) = zipWith toParam modes rest
+          pred = case opCode of
+            5 -> (/=)
+            6 -> (==)
+       in runProgram inputs outputs (if param1 `pred` 0 then param2 else curIdx + 3) opCodes
+  | opCode `elem` [7, 8] =
+      let writeIdx = rest !! 2
+          [param1, param2] = zipWith toParam modes $ take 2 rest
+          pred = case opCode of
+            7 -> (<)
+            8 -> (==)
+       in runProgram inputs outputs (curIdx + 4) (updateAt writeIdx (if param1 `pred` param2 then 1 else 0) opCodes)
   where
     (nextCode : rest) = drop curIdx opCodes
     opCode = nextCode `mod` 100
@@ -36,31 +47,11 @@ runProgram inputs outputs curIdx opCodes
     toParam Immediate = id
     toParam Position = (opCodes !!)
 
-solve :: [Int] -> [Int] -> Int
-solve inputs = head . fst . runProgram inputs [] 0 . restoreProgram
-  where
-    restoreProgram = updateAt 2 2 . updateAt 1 12
-
-parse :: (Read a) => String -> [a]
-parse = map read . splitOn ","
-
-part1_day2_test, part1_day2_real :: String -> Int -- TODO: delete
-part1_day2_test = head . fst . runProgram [1] [] 0 . parse
-part1_day2_real = solve [1] . parse
+solve :: [Int] -> String -> Int
+solve inputs = head . snd . runProgram inputs [] 0 . map read . splitOn ","
 
 part1 :: String -> Int
-part1 = head . quickTrace "res1" . snd . runProgram [1] [] 0 . parse
-
--- part2 :: String -> Int
--- part2 s =
---   head
---     [ 100 * noun + verb
---       | noun <- [0 .. 99],
---         verb <- [0 .. 99],
---         solve (noun, verb) opCodes == 19690720
---     ]
---   where
---     opCodes = parse s
+part1 = solve [1]
 
 part2 :: String -> Int
-part2 = const 2
+part2 = solve [5]
