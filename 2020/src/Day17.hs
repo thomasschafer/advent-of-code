@@ -4,7 +4,9 @@ import Data.Set (Set)
 import Data.Set qualified as S
 import Utils ((...))
 
-parse :: Int -> String -> Set [Int]
+type Coords = [Int]
+
+parse :: Int -> String -> Set Coords
 parse numDims = S.fromList . activeCoords . lines
  where
   activeCoords d =
@@ -14,7 +16,7 @@ parse numDims = S.fromList . activeCoords . lines
     , d !! y !! x == '#'
     ]
 
-neighbors :: [Int] -> Set [Int]
+neighbors :: Coords -> Set Coords
 neighbors coords = S.delete coords . S.fromList $ neighbors' coords
  where
   neighbors' [] = [[]]
@@ -24,26 +26,19 @@ neighbors coords = S.delete coords . S.fromList $ neighbors' coords
     , delta <- [-1 .. 1]
     ]
 
-runCycle :: Set [Int] -> Set [Int]
+runCycle :: Set Coords -> Set Coords
 runCycle active = stillActive `S.union` newlyActive
  where
+  numActiveNeighbors = length . S.filter (`elem` active) . neighbors
+
+  remainActive = (`elem` [2, 3]) . numActiveNeighbors
   stillActive = S.filter remainActive active
+
+  becomeActive = (== 3) . numActiveNeighbors
   newlyActive =
     S.filter
-      (\c -> not (isActive c) && becomeActive c)
-      (foldr (S.union . neighbors) S.empty active)
-
-  isActive = (`elem` active)
-
-  remainActive c =
-    if not (isActive c)
-      then error $ "remainActive was passed inactive element " ++ show c
-      else length (S.filter isActive $ neighbors c) `elem` [2, 3]
-
-  becomeActive c =
-    if isActive c
-      then error $ "becomeActive was passed active element " ++ show c
-      else length (S.filter isActive $ neighbors c) == 3
+      (\c -> (c `notElem` active) && becomeActive c)
+      (foldr1 S.union $ S.map neighbors active)
 
 solve :: Int -> String -> Int
 solve = length . (!! 6) . iterate runCycle ... parse
