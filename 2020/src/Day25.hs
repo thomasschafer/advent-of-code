@@ -2,10 +2,10 @@ module Day25 (part1) where
 
 import Data.List (elemIndex)
 import Data.Maybe (fromJust)
-import Utils (toTuple)
+import Utils ((...), toTuple)
 
 transform :: Integer -> Integer -> Integer
-transform subjectNum x = (x * subjectNum) `mod` 20201227
+transform = (`mod` 20201227) ... (*)
 
 encryptionKey :: Integer -> Integer -> Integer
 encryptionKey pubKey1 pubKey2 = privateKey
