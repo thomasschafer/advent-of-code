@@ -13,10 +13,7 @@ consumeStr (s : ss) (x : xs)
   | otherwise = Left xs
 
 consumeChar :: Char -> Parser ()
-consumeChar c (x : xs)
-  | x == c = Right ((), xs)
-  | otherwise = Left xs
-consumeChar _ s = Left $ safeTail s
+consumeChar = consumeStr . (: [])
 
 consumeWhile :: (Char -> Bool) -> Parser String
 consumeWhile p (x : xs)
@@ -26,24 +23,34 @@ consumeWhile p (x : xs)
     (digits, rest) = span p xs
 consumeWhile _ [] = Left []
 
-consume' :: Parser Int
-consume' s = do
+consumeMul :: Parser Int
+consumeMul s = do
   (_, s) <- consumeStr "mul" s
   (_, s) <- consumeChar '(' s
   (d1, s) <- consumeWhile isDigit s
   (_, s) <- consumeChar ',' s
   (d2, s) <- consumeWhile isDigit s
   (_, s) <- consumeChar ')' s
-  Right (read d1 * read d2, s)
+  return (read d1 * read d2, s)
 
-consume :: String -> [Int]
-consume "" = []
-consume xs = case consume' xs of
-  Left s -> consume s
-  Right (x, s) -> x : consume s
+consumeAll :: Bool -> Bool -> Parser Int
+consumeAll _ _ "" = Left ""
+consumeAll respectEnable _ ('d' : 'o' : '(' : ')' : rest) = consumeAll respectEnable True rest
+consumeAll respectEnable _ ('d' : 'o' : 'n' : '\'' : 't' : '(' : ')' : rest) = consumeAll respectEnable False rest
+consumeAll respectEnable enabled s
+  | enabled || not respectEnable = case consumeMul s of
+      Left s' -> consumeAll respectEnable enabled s'
+      Right (x, s') -> Right (x, s')
+  | otherwise = consumeAll respectEnable enabled $ safeTail s
+
+solve :: Bool -> String -> Int
+solve _ "" = 0
+solve respectEnable xs = case consumeAll respectEnable True xs of
+  Left s -> solve respectEnable s
+  Right (x, s) -> x + solve respectEnable s
 
 part1 :: String -> Int
-part1 = sum . consume
+part1 = solve False
 
 part2 :: String -> Int
-part2 = const 2
+part2 = solve True
