@@ -1,4 +1,4 @@
-module Utils ((...), lpad, mapTuple, quickTrace, setAt2d, setAt3d, toInt, toTuple, updateAt, withIdx, freqCounts) where
+module Utils ((...), lpad, mapTuple, quickTrace, setAt2d, setAt3d, toInt, toTuple, updateAt, withIdx, freqCounts, safeTail) where
 
 import Control.Arrow ((***))
 import Control.Monad (join)
@@ -46,3 +46,7 @@ freqCounts :: (Hashable a) => [a] -> HashMap a Int
 freqCounts = foldl update HM.empty
   where
     update acc x = HM.insert x (fromMaybe 0 (HM.lookup x acc) + 1) acc
+
+safeTail :: [a] -> [a]
+safeTail [] = []
+safeTail (_ : xs) = xs
