@@ -1,4 +1,4 @@
-module Utils ((...), lpad, mapTuple, quickTrace, setAt2d, setAt3d, toInt, toTuple, updateAt, withIdx, freqCounts, safeTail) where
+module Utils ((...), lpad, mapTuple, quickTrace, setAt, setAt2d, toInt, toTuple, withIdx, freqCounts, safeTail) where
 
 import Control.Arrow ((***))
 import Control.Monad (join)
@@ -30,17 +30,14 @@ infixr 8 ...
 (...) :: (b -> c) -> (a1 -> a2 -> b) -> a1 -> a2 -> c
 f ... g = (f .) . g
 
-setAt2d :: Int -> a -> [a] -> [a]
-setAt2d idx x xs = take idx xs ++ [x] ++ drop (idx + 1) xs
+setAt :: Int -> a -> [a] -> [a]
+setAt idx x xs = take idx xs ++ [x] ++ drop (idx + 1) xs
 
-setAt3d :: (Int, Int) -> a -> [[a]] -> [[a]]
-setAt3d (r, c) x matrix = setAt2d r (setAt2d c x $ matrix !! r) matrix
+setAt2d :: (Int, Int) -> a -> [[a]] -> [[a]]
+setAt2d (r, c) x matrix = setAt r (setAt c x $ matrix !! r) matrix
 
 toInt :: Char -> Int
 toInt = read . (: [])
-
-updateAt :: Int -> a -> [a] -> [a]
-updateAt idx newVal xs = take idx xs ++ [newVal] ++ drop (idx + 1) xs
 
 freqCounts :: (Hashable a) => [a] -> HashMap a Int
 freqCounts = foldl update HM.empty
