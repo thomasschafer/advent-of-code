@@ -1,4 +1,4 @@
-module Utils ((...), lpad, mapTuple, quickTrace, setAt, setAt2d, toInt, toTuple, withIdx, freqCounts, safeTail) where
+module Utils ((...), lpad, mapTuple, quickTrace, setAt, setAt2d, toInt, toTuple, withIdx, freqCounts, safeTail, groupBy) where
 
 import Control.Arrow ((***))
 import Control.Monad (join)
@@ -47,3 +47,10 @@ freqCounts = foldl update HM.empty
 safeTail :: [a] -> [a]
 safeTail [] = []
 safeTail (_ : xs) = xs
+
+groupBy :: (Hashable b) => (a -> b) -> [a] -> [[a]]
+groupBy f = map snd . HM.toList . foldl update HM.empty
+  where
+    update acc x =
+      let key = f x
+       in HM.insert key (x : fromMaybe [] (HM.lookup key acc)) acc
