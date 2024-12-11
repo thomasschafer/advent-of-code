@@ -1,4 +1,4 @@
-module Utils ((...), lpad, mapTuple, quickTrace, setAt, setAt2d, toInt, toTuple, withIdx, freqCounts, safeTail, groupBy) where
+module Utils ((...), lpad, mapTuple, quickTrace, setAt, setAt2d, toInt, toTuple, toList, withIdx, freqCounts, safeTail, groupBy) where
 
 import Control.Arrow ((***))
 import Control.Monad (join)
@@ -24,6 +24,9 @@ mapTuple = join (***)
 
 toTuple :: [a] -> (a, a)
 toTuple [x, y] = (x, y)
+
+toList :: (a, a) -> [a]
+toList (a, b) = [a, b]
 
 infixr 8 ...
 
