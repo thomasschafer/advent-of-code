@@ -1,38 +1,40 @@
 module Day13 (part1, part2) where
 
-import Control.Arrow (Arrow (first))
-import Data.HashMap.Strict qualified as HM
+import Control.Monad
 import Data.List.Split (splitOn)
 import Data.Maybe (mapMaybe)
-import Utils (revTuple, to3Tuple, toTuple)
+import Utils (mapTuple, to3Tuple, toTuple)
 
-parse :: String -> ((Int, Int), (Int, Int), (Int, Int))
-parse = to3Tuple . map (toTuple . map (read . drop 2) . splitOn ", " . last . splitOn ": ") . lines
+parse :: Int -> String -> ((Int, Int), (Int, Int), (Int, Int))
+parse toAdd =
+  (\(a, b, c) -> (a, b, mapTuple (+ toAdd) c))
+    . to3Tuple
+    . map (toTuple . map (read . drop 2) . splitOn ", " . last . splitOn ": ")
+    . lines
 
-subtractTuple :: (Int, Int) -> (Int, Int) -> (Int, Int)
-subtractTuple (ax, ay) (bx, by) = (ax - bx, ay - by)
-
+-- Algebra:
+-- (ax, ay)*af + (bx, by)*bf = (px, py)
+-- ax*af + bx*bf = px
+-- ay*af + by*bf = py
+-- bf = (px - ax*af)/bx -- (1)
+-- bf = (py - ay*af)/by
+-- by(px - ax*af) = bx(py - ay*af)
+-- bypx - ax*af*by = bx*py - ay*bx*af
+-- ay*bx*af - ax*by*af = bx*py - by*px
+-- af(ay*bx - ax*by) = bx*py - by*px
+-- af = (bx*py - by*px)/(ay*bx - ax*by)
+-- -- Plug this into (1) to get bf
 minTokensToWin :: ((Int, Int), (Int, Int), (Int, Int)) -> Maybe Int
-minTokensToWin (a, b, p) = snd $ minTokensToWin' HM.empty p
-  where
-    minTokensToWin' cache prize@(prizeX, prizeY)
-      | min prizeX prizeY < 0 = (cache, Nothing)
-      | prizeX == 0 && prizeY == 0 = (cache, Just 0)
-      | otherwise = case HM.lookup prize cache of
-          Just res -> (cache, res)
-          Nothing -> (HM.insert prize minCost updatedCache, minCost)
-      where
-        (costs, updatedCache) = foldl update ([], cache) [(a, 3), (b, 1)]
-        minCost = if null costs then Nothing else Just (minimum costs)
+minTokensToWin ((ax, ay), (bx, by), (px, py)) = do
+  let num = bx * py - by * px
+  let den = ay * bx - ax * by
+  guard $ num `mod` den == 0
+  let aFactor = num `div` den
+  let bFactor = (py - ay * aFactor) `div` by
+  return $ 3 * aFactor + bFactor
 
-        update (acc, cache) (move, cost) = first addIfJust . revTuple $ minTokensToWin' cache (subtractTuple prize move)
-          where
-            addIfJust = \case
-              Nothing -> acc
-              Just subCost -> (cost + subCost) : acc
+solve :: Int -> String -> Int
+solve toAdd = sum . mapMaybe (minTokensToWin . parse toAdd) . splitOn "\n\n"
 
-part1 :: String -> Int
-part1 = sum . mapMaybe (minTokensToWin . parse) . splitOn "\n\n"
-
-part2 :: String -> Int
-part2 = const 2
+part1, part2 :: String -> Int
+(part1, part2) = mapTuple solve (0, 10000000000000)
