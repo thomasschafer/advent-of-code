@@ -1,4 +1,4 @@
-module Utils ((...), lpad, mapTuple, quickTrace, setAt, setAt2d, toInt, toTuple, toList, withIdx, freqCounts, safeTail, groupBy) where
+module Utils ((...), lpad, mapTuple, quickTrace, setAt, setAt2d, toInt, toTuple, to3Tuple, toList, withIdx, freqCounts, safeTail, groupBy, revTuple) where
 
 import Control.Arrow ((***))
 import Control.Monad (join)
@@ -24,6 +24,9 @@ mapTuple = join (***)
 
 toTuple :: [a] -> (a, a)
 toTuple [x, y] = (x, y)
+
+to3Tuple :: [a] -> (a, a, a)
+to3Tuple (x : y : z : []) = (x, y, z)
 
 toList :: (a, a) -> [a]
 toList (a, b) = [a, b]
@@ -57,3 +60,6 @@ groupBy f = map snd . HM.toList . foldl update HM.empty
     update acc x =
       let key = f x
        in HM.insert key (x : fromMaybe [] (HM.lookup key acc)) acc
+
+revTuple :: (a, b) -> (b, a)
+revTuple (x, y) = (y, x)
