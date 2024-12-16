@@ -2,6 +2,7 @@
 
 module Day16 (part1, part2) where
 
+import Control.Arrow ((&&&))
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HM
 import Data.HashSet (HashSet)
@@ -32,41 +33,54 @@ type Node = ((Int, Int), Direction)
 (!??) = fromMaybe Infinity ... flip HM.lookup
 
 data DijkstraState = DijkstraState
-  { visitedSet :: HashSet Node,
-    distanceMap :: HashMap Node Distance,
-    nodeQueue :: MinPrioHeap Distance Node
+  { distanceMap :: HashMap Node Distance,
+    nodeQueue :: MinPrioHeap Distance (Node, [(Int, Int)]),
+    optimalPaths :: HashSet (Int, Int),
+    bestCost :: Distance
   }
   deriving (Show)
 
-dijkstra :: [[Tile]] -> Node -> (Int, Int) -> Distance
-dijkstra tiles src dest = processQueue initialState
+dijkstra :: [[Tile]] -> Node -> (Int, Int) -> (Distance, HashSet (Int, Int))
+dijkstra tiles src dest = bestCost &&& optimalPaths $ processQueue initialState
   where
-    initialState = DijkstraState initialVisited initialDistances initialQueue
+    initialState = DijkstraState initialDistances initialQueue initialPaths Infinity
       where
-        initialVisited = HS.empty
         initialDistances = HM.singleton src (Dist 0)
-        initialQueue = H.fromList [(Dist 0, src)]
+        initialQueue = H.fromList [(Dist 0, (src, [fst src]))]
+        initialPaths = HS.empty
 
-    processQueue :: DijkstraState -> Distance
-    processQueue ds@(DijkstraState v0 d0 q0) = case H.view q0 of
-      Just ((cost, node), q1) ->
-        if fst node == dest
-          then cost
+    processQueue ds@(DijkstraState d0 q0 paths bestCost) = case H.view q0 of
+      Just ((score, (node, path)), q1) ->
+        if score > (d0 !?? node)
+          then processQueue (ds {nodeQueue = q1})
           else
-            if HS.member node v0
-              then processQueue (ds {nodeQueue = q1})
+            if fst node == dest && score <= bestCost
+              then
+                processQueue
+                  ( ds
+                      { nodeQueue = q1,
+                        optimalPaths = HS.union paths (HS.fromList path),
+                        bestCost = score
+                      }
+                  )
               else
-                let v1 = HS.insert node v0
-                    unvisitedNeighbors =
-                      filter (\(n@((r, c), _), _) -> not (HS.member n v1 || tiles !! r !! c == Wall)) $
+                let unvisitedNeighbors =
+                      filter (\(((r, c), _), _) -> tiles !! r !! c /= Wall) $
                         weightedNeighbors node
-                 in processQueue $ foldl (foldNeighbour node) (DijkstraState v1 d0 q1) unvisitedNeighbors
-      _ -> Infinity
+                    newState = foldl (foldNeighbour path score) (ds {nodeQueue = q1}) unvisitedNeighbors
+                 in processQueue newState
+      _ -> ds
 
-    foldNeighbour current ds@(DijkstraState v1 d0 q1) (neighborNode, cost) =
-      let altDistance = (d0 !?? current) + Dist cost
-       in if altDistance < d0 !?? neighborNode
-            then DijkstraState v1 (HM.insert neighborNode altDistance d0) (H.insert (altDistance, neighborNode) q1)
+    foldNeighbour currentPath currentScore ds@(DijkstraState d0 q1 paths bestCost) (neighborNode, cost) =
+      let altDistance = currentScore + Dist cost
+          newPath = fst neighborNode : currentPath
+       in if altDistance <= bestCost && altDistance <= (d0 !?? neighborNode)
+            then
+              DijkstraState
+                (HM.insert neighborNode altDistance d0)
+                (H.insert (altDistance, (neighborNode, newPath)) q1)
+                paths
+                bestCost
             else ds
 
 weightedNeighbors :: Node -> [(Node, Int)]
@@ -94,14 +108,14 @@ parse '.' = Empty
 parse 'S' = Start
 parse 'E' = End
 
-solve :: [[Tile]] -> Int
-solve grid = fromDist $ dijkstra grid (start, East) end
+solve :: String -> (Distance, HashSet (Int, Int))
+solve input = dijkstra grid (start, East) end
   where
+    grid = map (map parse) $ lines input
     (start, end) = mapTuple (head . positionsOf grid . (==)) (Start, End)
-    fromDist (Dist x) = x
 
 part1 :: String -> Int
-part1 = solve . map (map parse) . lines
+part1 = (\(Dist x) -> x) . fst . solve
 
 part2 :: String -> Int
-part2 = const 2
+part2 = length . snd . solve
