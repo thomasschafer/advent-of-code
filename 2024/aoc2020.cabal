@@ -7,7 +7,7 @@ executable aoc2020
   hs-source-dirs:     src
   main-is:            Main.hs
   other-modules:
-    Day15
+    Day16
     Utils
 
   default-extensions:
@@ -20,6 +20,7 @@ executable aoc2020
   build-depends:
     , base                  >=4.7 && <5
     , hashable              >=1.2
+    , heap                  >=1.0
     , containers            >=0.6
     , parsec                >=3.1
     , split                 >=0.2

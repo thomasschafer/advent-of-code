@@ -6,21 +6,13 @@ import Data.Bifunctor (bimap)
 import Data.Foldable (find)
 import Data.List.Split (splitOn)
 import Data.Maybe (fromMaybe, mapMaybe)
-import Utils (mapTuple, toTuple)
+import Utils (mapTuple, positionsOf, toTuple)
 
 data Obj = Robot | Box | BoxLeft | BoxRight | Wall deriving (Eq, Show)
 
 type Grid = [[Maybe Obj]]
 
 data Move = U | D | L | R deriving (Eq, Show)
-
-positionsOf :: Grid -> [Maybe Obj] -> [(Int, Int)]
-positionsOf grid xs =
-  [ (r, c)
-    | r <- [0 .. length grid - 1],
-      c <- [0 .. length (head grid) - 1],
-      grid !! r !! c `elem` xs
-  ]
 
 updateMultiple2d :: [((Int, Int), a)] -> [[a]] -> [[a]]
 updateMultiple2d updates grid =
@@ -39,7 +31,7 @@ applyMove move grid = case move of
   L -> fromMaybe grid $ shiftAllHorizontal (-1) robotPos grid
   R -> fromMaybe grid $ shiftAllHorizontal 1 robotPos grid
   where
-    robotPos = head $ positionsOf grid [Just Robot]
+    robotPos = head $ positionsOf grid (== Just Robot)
 
 shiftAllVertical :: Int -> (Int, Int) -> Grid -> Maybe Grid
 shiftAllVertical step (r, c) grid = case grid !! (r + step) !! c of
@@ -60,7 +52,7 @@ shiftAllHorizontal step (r, c) grid = case grid !! r !! (c + step) of
     moveCur = updateMultiple2d [((r, c), Nothing), ((r, c + step), grid !! r !! c)]
 
 gpsCoords :: Grid -> Int
-gpsCoords grid = sum . map (uncurry (+) . first (100 *)) . positionsOf grid $ map Just [Box, BoxLeft]
+gpsCoords grid = sum . map (uncurry (+) . first (100 *)) $ positionsOf grid (`elem` map Just [Box, BoxLeft])
 
 parse :: String -> (Grid, [Move])
 parse = bimap (parseGrid . lines) parseMoves . toTuple . splitOn "\n\n"
