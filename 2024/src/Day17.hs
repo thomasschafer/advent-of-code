@@ -55,4 +55,16 @@ part1 :: String -> String
 part1 = intercalate "," . map show . uncurry (run 0) . parse
 
 part2 :: String -> Int
-part2 = const 2
+part2 s = head $ solve (length program - 1) 0
+  where
+    ((_, b, c), program) = parse s
+
+    solve curPower acc
+      | curPower < 0 = [acc]
+      | otherwise =
+          concat
+            [ solve (curPower - 1) acc'
+              | x <- [0 .. 7],
+                let acc' = acc + x * 8 ^ curPower,
+                drop curPower program == drop curPower (run 0 (acc', b, c) program)
+            ]
