@@ -1,19 +1,23 @@
-module Day18 (part1Test, part1Full, part2) where
+module Day18 (part1Test, part1Full, part2Test, part2Full) where
 
 import Control.Arrow (Arrow (first))
 import Control.Monad (join)
 import Data.List.Split (splitOn)
+import Data.Maybe (fromJust)
 import Data.Set (Set)
 import Data.Set qualified as S
-import Utils (mapTuple, toTuple)
+import Data.Tuple (swap)
+import Utils (mapTuple, toTuple, (...))
 
-solve :: (Int, Int) -> Set (Int, Int) -> Int
-solve (maxRow, maxCol) blocked = solve' (S.singleton (0, 0)) S.empty
+solve :: Bool -> (Int, Int) -> Set (Int, Int) -> Maybe Int
+solve startAtEnd (maxRow, maxCol) blocked = solve' (S.singleton start) S.empty
   where
-    solve' :: Set (Int, Int) -> Set (Int, Int) -> Int
+    (start, end) = (if startAtEnd then swap else id) ((0, 0), (maxRow - 1, maxCol - 1))
+
     solve' positions visited
-      | (maxRow - 1, maxCol - 1) `elem` positions = 0
-      | otherwise = 1 + solve' (S.fromList $ concatMap neighbors positions) (S.union visited positions)
+      | null positions = Nothing
+      | end `elem` positions = Just 0
+      | otherwise = (1 +) <$> solve' (S.fromList $ concatMap neighbors positions) (S.union visited positions)
       where
         neighbors (r, c) =
           [ (r', c')
@@ -22,11 +26,20 @@ solve (maxRow, maxCol) blocked = solve' (S.singleton (0, 0)) S.empty
               (r', c') `notElem` blocked && (r', c') `notElem` visited
           ]
 
-part1 :: (Int, Int) -> Int -> String -> Int
-part1 dims numBytes = solve dims . S.fromList . take numBytes . map (toTuple . map read . splitOn ",") . lines
+parse :: Maybe Int -> String -> [(Int, Int)]
+parse numBytes = maybe id take numBytes . map (toTuple . map read . splitOn ",") . lines
 
 part1Test, part1Full :: String -> Int
 (part1Test, part1Full) = mapTuple (uncurry part1 . first (join (,))) ((7, 12), (71, 1024))
+  where
+    part1 :: (Int, Int) -> Int -> String -> Int
+    part1 dims = fromJust . solve False dims . S.fromList ... parse . Just
 
-part2 :: String -> Int
-part2 = const 2
+part2Test, part2Full :: String -> (Int, Int)
+(part2Test, part2Full) = mapTuple (part2 . join (,)) (7, 71)
+  where
+    part2 dims = firstToRemove . reverse . parse Nothing
+      where
+        firstToRemove (toRemove : rest) = case solve True dims (S.fromList rest) of
+          Just _ -> toRemove
+          Nothing -> firstToRemove rest
