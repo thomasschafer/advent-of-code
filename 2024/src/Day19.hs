@@ -1,24 +1,29 @@
 module Day19 (part1, part2) where
 
+import Control.Arrow (Arrow (first, (&&&)))
 import Data.Bifunctor (Bifunctor (bimap))
+import Data.HashMap.Strict (HashMap)
+import Data.HashMap.Strict qualified as HM
 import Data.List (isPrefixOf)
 import Data.List.Split (splitOn)
 import Utils (toTuple)
 
-parse :: String -> ([String], [String])
-parse = bimap (splitOn ", ") lines . toTuple . splitOn "\n\n"
+numPossible :: HashMap String Int -> [String] -> String -> (Int, HashMap String Int)
+numPossible cache _ [] = (1, cache)
+numPossible cache towels design = case HM.lookup design cache of
+  Just res -> (res, cache)
+  Nothing -> (res, HM.insert design res updatedCache)
+    where
+      (res, updatedCache) = foldl update (0, cache) towels
 
-part1 :: String -> Int
-part1 s = length $ filter (isPossible towels) designs
+      update (x, c) towel
+        | towel `isPrefixOf` design = first (x +) $ numPossible c towels (drop (length towel) design)
+        | otherwise = (x, c)
+
+solve :: String -> [Int]
+solve s = map (fst . numPossible HM.empty towels) designs
   where
-    (towels, designs) = parse s
+    (towels, designs) = bimap (splitOn ", ") lines . toTuple $ splitOn "\n\n" s
 
-isPossible :: [String] -> String -> Bool
-isPossible _ [] = True
-isPossible towels design =
-  any
-    (\towel -> towel `isPrefixOf` design && isPossible towels (drop (length towel) design))
-    towels
-
-part2 :: String -> Int
-part2 = const 2
+part1, part2 :: String -> Int
+(part1, part2) = ((length . filter (> 0)) .) &&& (sum .) $ solve
