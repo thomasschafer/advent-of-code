@@ -1,4 +1,4 @@
-import Day20 (part1Full, part1Test)
+import Day20 (part1Full, part1Test, part2Full, part2Test)
 
 main :: IO ()
 main = do
@@ -6,6 +6,5 @@ main = do
   realData <- readFile "data/day_20.txt"
   print $ part1Test testData
   print $ part1Full realData
-  -- print $ part2Test testData
-  -- print $ part2Full realData
-  return ()
+  print $ part2Test testData
+  print $ part2Full realData

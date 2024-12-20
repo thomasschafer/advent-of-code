@@ -1,8 +1,7 @@
-module Day20 (part1Test, part1Full, part2) where
+module Day20 (part1Test, part1Full, part2Test, part2Full) where
 
 import Data.List (tails)
 import Data.Maybe (mapMaybe)
-import Data.Set (Set)
 import Data.Set qualified as S
 import Utils (mapTuple, positionsOf)
 
@@ -22,32 +21,38 @@ findPath grid = bfs S.empty start
     (rows, cols) = (length grid, length (head grid))
     walls = S.fromList $ positionsOf grid (== Wall)
 
-    bfs :: Set (Int, Int) -> (Int, Int) -> [(Int, Int)]
-    bfs visited position@(r, c)
+    bfs visited position
       | position == end = [position]
       | otherwise = position : bfs (S.insert position visited) nextPosition
       where
         nextPosition =
-          (\[pos] -> pos) $
-            filter
+          (\[pos] -> pos)
+            . filter
               (\pos -> pos `notElem` visited && pos `notElem` walls && withinBounds pos)
-              [(r + 1, c), (r - 1, c), (r, c + 1), (r, c - 1)]
+            $ neighbors position
         withinBounds (r', c') = r' >= 0 && r' < rows && c' >= 0 && c' < cols
 
-part1 :: Int -> String -> Int
-part1 jumpReq = sum . map (uncurry shortcuts) . mapMaybe split . tails . findPath . map (map parse) . lines
+neighbors :: (Int, Int) -> [(Int, Int)]
+neighbors (r, c) = [(r + 1, c), (r - 1, c), (r, c + 1), (r, c - 1)]
+
+solve :: Int -> Int -> String -> Int
+solve maxJump minTimeSaved s = sum . map (uncurry shortcuts) . mapMaybe split . tails $ findPath grid
   where
-    split (x : _ : rest) = Just (x, reverse $ drop jumpReq rest)
+    grid = map (map parse) $ lines s
+
+    split (x : rest) = Just (x, rest)
     split _ = Nothing
 
-    shortcuts :: (Int, Int) -> [(Int, Int)] -> Int
-    shortcuts _ [] = 0
-    shortcuts (r, c) ((r', c') : rest) =
-      (if abs (r' - r) + abs (c' - c) <= 2 then 1 else 0)
-        + shortcuts (r, c) rest
+    shortcuts cur =
+      length
+        . filter (\(timeNormalReaches, pos) -> dist cur pos <= maxJump && timeNormalReaches - dist cur pos >= minTimeSaved)
+        . zip [1 ..]
+
+dist :: (Int, Int) -> (Int, Int) -> Int
+dist (r, c) (r', c') = abs (r' - r) + abs (c' - c)
 
 part1Test, part1Full :: String -> Int
-(part1Test, part1Full) = mapTuple part1 (64, 100)
+(part1Test, part1Full) = mapTuple (solve 2) (10, 100)
 
-part2 :: String -> Int
-part2 = const 2
+part2Test, part2Full :: String -> Int
+(part2Test, part2Full) = mapTuple (solve 20) (72, 100)
