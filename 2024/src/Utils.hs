@@ -1,4 +1,4 @@
-module Utils ((...), lpad, mapTuple, quickTrace, setAt, setAt2d, toInt, toTuple, to3Tuple, toList, withIdx, freqCounts, safeTail, groupBy, revTuple, positionsOf) where
+module Utils ((...), lpad, mapTuple, quickTrace, setAt, setAt2d, toInt, toTuple, to3Tuple, toList, withIdx, freqCounts, safeTail, groupBy, revTuple, positionsOf, positionOf) where
 
 import Control.Arrow ((***))
 import Control.Monad (join)
@@ -64,10 +64,13 @@ groupBy f = map snd . HM.toList . foldl update HM.empty
 revTuple :: (a, b) -> (b, a)
 revTuple (x, y) = (y, x)
 
-positionsOf :: [[a]] -> (a -> Bool) -> [(Int, Int)]
-positionsOf grid p =
+positionsOf :: (a -> Bool) -> [[a]] -> [(Int, Int)]
+positionsOf p grid =
   [ (r, c)
     | r <- [0 .. length grid - 1],
       c <- [0 .. length (head grid) - 1],
       p $ grid !! r !! c
   ]
+
+positionOf :: (a -> Bool) -> [[a]] -> (Int, Int)
+positionOf = (\[x] -> x) ... positionsOf
