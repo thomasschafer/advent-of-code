@@ -1,0 +1,28 @@
+# Haskell
+dist/
+dist-newstyle/
+.stack-work/
+*.hi
+*.o
+*.dyn_hi
+*.dyn_o
+.hie/
+.ghc.environment.*
+
+# Cabal
+cabal.project.local
+cabal.project.local~
+
+# Nix
+.direnv/
+.envrc.cache
+result
+result-*
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
