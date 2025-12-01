@@ -67,9 +67,9 @@ revTuple (x, y) = (y, x)
 positionsOf :: (a -> Bool) -> [[a]] -> [(Int, Int)]
 positionsOf p grid =
   [ (r, c)
-    | r <- [0 .. length grid - 1],
-      c <- [0 .. length (head grid) - 1],
-      p $ grid !! r !! c
+  | r <- [0 .. length grid - 1],
+    c <- [0 .. length (head grid) - 1],
+    p $ grid !! r !! c
   ]
 
 positionOf :: (a -> Bool) -> [[a]] -> (Int, Int)
