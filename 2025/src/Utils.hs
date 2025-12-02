@@ -1,4 +1,4 @@
-module Utils ((...), lpad, mapTuple, quickTrace, setAt, setAt2d, toInt, toTuple, to3Tuple, toList, withIdx, freqCounts, safeTail, groupBy, revTuple, positionsOf, positionOf) where
+module Utils ((...), lpad, mapTuple, quickTrace, setAt, setAt2d, toInt, toTuple, to3Tuple, toList, withIdx, freqCounts, safeTail, groupBy, revTuple, positionsOf, positionOf, allEqual, chunksOf) where
 
 import Control.Arrow ((***))
 import Control.Monad (join)
@@ -74,3 +74,13 @@ positionsOf p grid =
 
 positionOf :: (a -> Bool) -> [[a]] -> (Int, Int)
 positionOf = (\[x] -> x) ... positionsOf
+
+allEqual :: (Eq a) => [a] -> Bool
+allEqual [] = True
+allEqual (x : xs) = all (== x) xs
+
+chunksOf :: Int -> [a] -> [[a]]
+chunksOf _ [] = []
+chunksOf n xs
+  | length xs < n = error "list not chunkable"
+  | otherwise = take n xs : (chunksOf n $ drop n xs)
