@@ -9,7 +9,7 @@ import Data.Maybe (fromMaybe)
 import Debug.Trace (trace)
 
 withIdx :: [b] -> [(Int, b)]
-withIdx l = zip [0 .. length l] l
+withIdx l = zip [0 ..] l
 
 quickTrace :: (Show a) => [Char] -> a -> a
 quickTrace name value = trace (name ++ " " ++ show value) value
