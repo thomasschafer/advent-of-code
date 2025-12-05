@@ -39,6 +39,7 @@ else
 fi
 
 # Create data files
+mkdir -p data
 create_file_if_missing "data/day_${DAY}_test.txt" "data/day_${DAY}_test.txt"
 create_file_if_missing "data/day_${DAY}.txt" "data/day_${DAY}.txt"
 
