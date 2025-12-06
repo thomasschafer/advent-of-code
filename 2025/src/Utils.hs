@@ -1,4 +1,4 @@
-module Utils ((...), lpad, mapTuple, quickTrace, setAt, setAt2d, toInt, toTuple, to3Tuple, toList, withIdx, freqCounts, safeTail, groupBy, revTuple, positionsOf, positionOf, allEqual, chunksOf) where
+module Utils ((...), lpad, rpad, mapTuple, quickTrace, setAt, setAt2d, toInt, toTuple, to3Tuple, toList, withIdx, freqCounts, safeTail, groupBy, revTuple, positionsOf, positionOf, allEqual, chunksOf, stripPrefix) where
 
 import Control.Arrow ((***))
 import Control.Monad (join)
@@ -14,10 +14,15 @@ withIdx l = zip [0 ..] l
 quickTrace :: (Show a) => [Char] -> a -> a
 quickTrace name value = trace (name ++ " " ++ show value) value
 
-lpad :: a -> Int -> [a] -> [a]
-lpad val n xs = replicate (n - length ys) val ++ ys
+pad :: Bool -> a -> Int -> [a] -> [a]
+pad start val n xs = combine (replicate (n - length ys) val, ys)
   where
     ys = take n xs
+    combine = uncurry $ (if start then id else flip) (++)
+
+lpad, rpad :: a -> Int -> [a] -> [a]
+rpad = pad False
+lpad = pad True
 
 mapTuple :: (a -> b) -> (a, a) -> (b, b)
 mapTuple = join (***)
@@ -84,3 +89,9 @@ chunksOf _ [] = []
 chunksOf n xs
   | length xs < n = error "list not chunkable"
   | otherwise = take n xs : (chunksOf n $ drop n xs)
+
+stripPrefix :: (Eq a) => a -> [a] -> [a]
+stripPrefix _ [] = []
+stripPrefix y (x:xs)
+  | x == y = stripPrefix y xs
+  | otherwise = (x:xs)
