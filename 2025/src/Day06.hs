@@ -1,23 +1,20 @@
 module Day06 (part1, part2) where
 
-import Utils (rpad, quickTrace)
 import Data.List (transpose)
-import Data.Bifunctor (bimap)
+import Data.List.Split (splitWhen)
 
-data Op = Add | Multiply deriving (Show)
-
-parseOp :: String -> Op
-parseOp "+" = Add
-parseOp "*" = Multiply
-
-fromOp :: Op -> [Int] -> Int
-fromOp Add = sum
-fromOp Multiply = product
+parseOp :: Char -> ([Int] -> Int)
+parseOp '+' = sum
+parseOp '*' = product
 
 part1 :: String -> Int
-part1  = sum . map (uncurry ($) . parse) . transpose . map words . lines
+part1 = sum . map (uncurry ($) . parse) . transpose . map words . lines
   where
-    parse xs = (fromOp . parseOp $ last xs, map read $ init xs)
+    parse xs = (parseOp . head $ last xs, map read $ init xs)
 
 part2 :: String -> Int
-part2 = const 2
+part2 = sum . map solve . splitWhen (all (== ' ')) . transpose . lines
+  where
+    solve (n : ns) = op $ map read (numHead : ns)
+      where
+        (numHead, op) = (init n, parseOp $ last n)

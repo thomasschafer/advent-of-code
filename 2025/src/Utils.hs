@@ -1,4 +1,4 @@
-module Utils ((...), lpad, rpad, mapTuple, quickTrace, setAt, setAt2d, toInt, toTuple, to3Tuple, toList, withIdx, freqCounts, safeTail, groupBy, revTuple, positionsOf, positionOf, allEqual, chunksOf, stripPrefix) where
+module Utils ((...), lpad, rpad, mapTuple, quickTrace, setAt, setAt2d, toInt, toTuple, to3Tuple, toList, withIdx, freqCounts, safeTail, groupBy, revTuple, positionsOf, positionOf, allEqual, chunksOf, stripPrefix, splitWhenIncl) where
 
 import Control.Arrow ((***))
 import Control.Monad (join)
@@ -95,3 +95,10 @@ stripPrefix _ [] = []
 stripPrefix y (x:xs)
   | x == y = stripPrefix y xs
   | otherwise = (x:xs)
+
+splitWhenIncl :: (a -> Bool) -> [a] -> [[a]]
+splitWhenIncl f = uncurry (:) . foldr step ([], [])
+  where
+    step x (cur, acc)
+      | f x = ([x], cur:acc)
+      | otherwise = (x:cur, acc)
