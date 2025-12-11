@@ -17,6 +17,7 @@ executable aoc2025
     Day08
     Day09
     Day10
+    Day11
     Utils
 
   default-extensions:
