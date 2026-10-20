@@ -1,0 +1,17 @@
+# Packages your Haskell solutions can use, one per line. Workshop installs them
+# when you choose Install in its settings.
+containers
+unordered-containers
+split
+array
+mtl
+transformers
+text
+bytestring
+parsec
+deepseq
+hashable
+vector
+pqueue
+deque
+heap

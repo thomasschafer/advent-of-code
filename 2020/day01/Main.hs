@@ -1,0 +1,35 @@
+module Main (main) where
+
+import Data.Maybe (fromJust)
+import Data.Set qualified as S
+
+main :: IO ()
+main = do
+  input <- getContents
+  print (part1 input)
+  print (part2 input)
+
+twoSum :: (Ord a, Num a) => a -> [a] -> Maybe (a, a)
+twoSum = twoSum' S.empty
+  where
+    twoSum' _ _ [] = Nothing
+    twoSum' seen target (x : xs)
+      | required `elem` seen = Just (x, required)
+      | otherwise = twoSum' (S.insert x seen) target xs
+      where
+        required = target - x
+
+part1 :: String -> Int
+part1 = uncurry (*) . fromJust . twoSum 2020 . map read . lines
+
+threeSum :: (Ord a, Num a) => a -> [a] -> Maybe (a, a, a)
+threeSum target (n : nums) =
+  case twoSum (target - n) nums of
+    Just (x, y) -> Just (n, x, y)
+    Nothing -> threeSum target nums
+threeSum _ _ = Nothing
+
+part2 :: String -> Int
+part2 = tupleProduct . fromJust . threeSum 2020 . map read . lines
+  where
+    tupleProduct (x, y, z) = x * y * z

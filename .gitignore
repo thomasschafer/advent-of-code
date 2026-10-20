@@ -1,2 +1,11 @@
+# Advent of Code asks that puzzle inputs and text aren't published. Workshop keeps them outside
+# this repo, but these guard against copies made by hand.
 */data/
-*/rust/target/
+input*.txt
+*.input
+# Build output
+*.o
+*.hi
+dist-newstyle/
+.toolchain/
+/target/
