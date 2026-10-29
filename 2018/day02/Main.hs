@@ -6,12 +6,13 @@ import Data.HashMap.Strict (HashMap)
 import qualified Data.Set as S
 import Data.Set (Set)
 
+import Debug.Trace (traceShowId)
+
 main :: IO ()
 main = do
   input <- getContents
   print (part1 input)
-  -- When you start part 2, uncomment the next line.
-  -- print (part2 input)
+  putStrLn (part2 input)
 
 counts :: Int -> [Set Int] -> Int
 counts n = length . filter (S.member n)
@@ -26,5 +27,14 @@ part1 s = counts 2 ws * counts 3 ws
       where
         h' = HM.insert x (1 + HM.findWithDefault 0 x h) h
 
-part2 :: String -> Int
-part2 = undefined
+part2 :: String -> String
+part2 = filter (/= '-') . findDuplicate S.empty . concatMap (traceShowId . blankOnePerms []) . traceShowId . lines
+  where
+    blankOnePerms :: [Char] -> [Char] -> [[Char]]
+    blankOnePerms prefix [x] = [prefix++"-"]
+    blankOnePerms prefix (x:xs) = (prefix++"-"++xs):(blankOnePerms (prefix++[x]) xs)
+
+    findDuplicate :: (Ord a) => Set a -> [a] -> a
+    findDuplicate seen (x:xs)
+      | x `S.member` seen = x
+      | otherwise = findDuplicate (S.insert x seen) xs
