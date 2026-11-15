@@ -12,6 +12,7 @@ main = do
 reactsWith :: Char -> Char -> Bool
 reactsWith a b = toUpper a == toUpper b && a /= b
 
+reactAll :: String -> String -> String
 reactAll stack [] = stack
 reactAll [] (l : ls) = reactAll [l] ls
 reactAll stack@(top : rest) (l : ls)
