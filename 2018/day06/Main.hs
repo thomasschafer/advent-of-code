@@ -4,7 +4,6 @@ import Control.Arrow (Arrow (first, second), (&&&))
 import Control.Monad (join)
 import Data.Bifunctor (bimap)
 import Data.Foldable (maximumBy)
-import Data.HashMap.Internal.Array (update)
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HM
 import Data.List (mapAccumL)
@@ -18,9 +17,7 @@ main :: IO ()
 main = do
   input <- getContents
   print (part1 input)
-
--- When you start part 2, uncomment the next line.
--- print (part2 input)
+  print (part2 input)
 
 parse :: String -> (Int, Int)
 parse = toTuple . map read . splitOn ", "
@@ -72,5 +69,12 @@ largestTerritory = maximum . map S.size . HM.elems . HM.fromListWith S.union . m
 part1 :: String -> Int
 part1 = largestFiniteTerritory . map parse . lines
 
+numPointsWithinDist :: Int -> [(Int, Int)] -> Int
+numPointsWithinDist d points = length $ filter withinDist [(x, y) | x <- [lx .. gx], y <- [ly .. gy]]
+  where
+    ((lx, gx), (ly, gy)) = join bimap (minimum &&& maximum) (unzip points)
+    -- technically there could be valid points outside of the bounding box but this should work on our input
+    withinDist (x, y) = sum [abs (x - px) + abs (y - py) | (px, py) <- points] < d
+
 part2 :: String -> Int
-part2 = undefined
+part2 = numPointsWithinDist 10000 . map parse . lines
