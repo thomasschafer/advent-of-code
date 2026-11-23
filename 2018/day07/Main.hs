@@ -6,6 +6,7 @@ import Data.Char (ord)
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HM
 import Data.List (partition, sort, sortBy)
+import Data.List qualified as L
 import Data.Maybe (fromMaybe, isJust, isNothing, listToMaybe, mapMaybe)
 import Data.Ord (Down (Down), comparing)
 import Data.Set (Set)
@@ -42,7 +43,7 @@ stepOrderParallel numWorkers delay graphTuples = go ([], 0) (depMap graphTuples)
             -- a worker and job are availble: don't continue any existing work, just allocate that new work
             (_, nextJob : _)
               | length workers < numWorkers ->
-                  go (acc, time) (HM.delete nextJob deps) (sort $ (time + toTime nextJob delay, nextJob) : workers)
+                  go (acc, time) (HM.delete nextJob deps) (L.insert (toTime nextJob delay, nextJob) workers)
             -- advance time until first available job is complete
             ((t, _) : _, _) ->
               let (finished, unfinished) = span ((== t) . fst) workers
