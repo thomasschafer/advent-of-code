@@ -6,9 +6,7 @@ main :: IO ()
 main = do
   input <- getContents
   print (part1 input)
-
--- When you start part 2, uncomment the next line.
--- print (part2 input)
+  print (part2 input)
 
 data Node = Node
   { children :: [Node],
@@ -31,5 +29,10 @@ sumMetadata Node {children, metadata} = sum metadata + sum (map sumMetadata chil
 part1 :: String -> Int
 part1 = sumMetadata . parse
 
+value :: Node -> Int
+value (Node cs m)
+  | null cs = sum m
+  | otherwise = sum [value n | i <- m, i >= 1 && i <= length cs, let n = cs !! (i - 1)]
+
 part2 :: String -> Int
-part2 = undefined
+part2 = value . parse
