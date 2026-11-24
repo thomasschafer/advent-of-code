@@ -1,8 +1,6 @@
 module Main where
 
-import Control.Arrow (Arrow (first))
-import Data.Bifunctor (Bifunctor (..))
-import Debug.Trace (traceShowId)
+import Control.Arrow (Arrow (second))
 
 main :: IO ()
 main = do
@@ -19,17 +17,13 @@ data Node = Node
   deriving (Show)
 
 parse :: String -> Node
-parse = (\(n, []) -> n) . go . map read . words . head . lines
+parse = (\([n], []) -> n) . go 1 . map read . words
   where
-    go :: [Int] -> (Node, [Int])
-    go (numChildren : numMetadata : rest) = (Node {children = cs, metadata = m}, rest')
+    go 0 rest = ([], rest)
+    go n (numChildren : numMetadata : rest) = (Node cs m : nodes, rest'')
       where
-        (cs, (m, rest')) = bimap reverse (splitAt numMetadata) $ iterate takeChild ([], rest) !! numChildren
-
-        takeChild :: ([Node], [Int]) -> ([Node], [Int])
-        takeChild (acc, rem) = (c : acc, rem')
-          where
-            (c, rem') = go rem
+        (cs, (m, rest')) = second (splitAt numMetadata) $ go numChildren rest
+        (nodes, rest'') = go (n - 1) rest'
 
 sumMetadata :: Node -> Int
 sumMetadata Node {children, metadata} = sum metadata + sum (map sumMetadata children)
