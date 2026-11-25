@@ -9,8 +9,6 @@ import Data.Sequence qualified as Seq
 
 main :: IO ()
 main = do
-  -- let input = "7 players; last marble is worth 50 points"
-  -- let input = "10 players; last marble is worth 1618 points"
   input <- getContents
   print (part1 input)
   print (part2 input)
