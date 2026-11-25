@@ -45,4 +45,4 @@ part1 :: String -> Int
 part1 = uncurry solve . parse
 
 part2 :: String -> Int
-part2 = uncurry solve . second (*100) . parse
+part2 = uncurry solve . second (* 100) . parse
