@@ -1,6 +1,6 @@
 module Main where
 
-import Control.Arrow ((***))
+import Control.Arrow (second, (***))
 import Control.Monad (join)
 import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HM
@@ -13,9 +13,7 @@ main = do
   -- let input = "10 players; last marble is worth 1618 points"
   input <- getContents
   print (part1 input)
-
--- When you start part 2, uncomment the next line.
--- print (part2 input)
+  print (part2 input)
 
 parse :: String -> (Int, Int)
 parse s = case words s of
@@ -49,4 +47,4 @@ part1 :: String -> Int
 part1 = uncurry solve . parse
 
 part2 :: String -> Int
-part2 = undefined
+part2 = uncurry solve . second (*100) . parse
