@@ -12,10 +12,9 @@ main :: IO ()
 main = do
   input <- getContents
   let (idx, ps) = solve input
-  traceShowM idx
   traceM $ display ps
   print "ZAEZRLZG"
-  print 10105
+  print idx
 
 display :: [Point] -> String
 display = intercalate "\n" . toGrid
@@ -34,9 +33,6 @@ boxBounds = join (***) ((minimum &&& maximum)) . unzip . map (x &&& y)
 
 boxSize :: [Point] -> Int
 boxSize = uncurry (*) . join (***) (uncurry $ flip (-)) . boxBounds
-
--- When you start part 2, uncomment the next line.
--- print (part2 input)
 
 data Point = Point (Int, Int) (Int, Int)
 
