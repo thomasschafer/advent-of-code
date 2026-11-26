@@ -1,9 +1,7 @@
 module Main (main) where
 
-import Control.Arrow ((&&&))
 import Data.HashMap.Lazy qualified as HM
 import Data.List (intercalate)
-import Data.Maybe (fromJust)
 
 main :: IO ()
 main = do
@@ -22,15 +20,18 @@ solve includeSize boxSizes s = intercalate "," . (\(x, y, boxSize) -> map show (
     maxCoord = 300
     serialNum = read s
 
-    coords = [(x, y) | x <- [1 .. maxCoord], y <- [1 .. maxCoord]]
-    powerLevels = HM.fromList $ map (id &&& uncurry (powerLevel serialNum)) coords
-    sumsFromTopRight = HM.fromList $ map (id &&& uncurry calc) coords
+    sumsFromTopLeft1 = HM.fromList [((x, y), calc x y) | x <- [1 .. maxCoord], y <- [1 .. maxCoord]]
       where
-        calc xb yb = get (xb - 1) yb + get xb (yb - 1) - get (xb - 1) (yb - 1) + fromJust (HM.lookup (xb, yb) powerLevels)
+        calc xb yb = get (xb - 1) yb + get xb (yb - 1) - get (xb - 1) (yb - 1) + powerLevel serialNum xb yb
 
-    get = curry $ flip (HM.findWithDefault 0) sumsFromTopRight
+    get = curry $ flip (HM.findWithDefault 0) sumsFromTopLeft1
 
-    squares = [(calc (x, y) (x + boxSize - 1, y + boxSize - 1), (x, y, boxSize)) | boxSize <- boxSizes, x <- [1 .. maxCoord - boxSize + 1], y <- [1 .. maxCoord - boxSize + 1]]
+    squares =
+      [ (calc (x, y) (x + boxSize - 1, y + boxSize - 1), (x, y, boxSize))
+      | boxSize <- boxSizes,
+        x <- [1 .. maxCoord - boxSize + 1],
+        y <- [1 .. maxCoord - boxSize + 1]
+      ]
       where
         calc (xt, yt) (xb, yb) = get xb yb - get xb (yt - 1) - get (xt - 1) yb + get (xt - 1) (yt - 1)
 
