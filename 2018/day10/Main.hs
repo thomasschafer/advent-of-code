@@ -1,18 +1,21 @@
 module Main where
 
-import Control.Arrow ((&&&), (***))
+import Control.Arrow (second, (&&&), (***))
 import Control.Monad (join)
 import Data.Char (isDigit)
 import Data.List (intercalate, maximumBy, minimumBy)
 import Data.Ord (comparing)
 import Data.Set qualified as S
-import Debug.Trace (traceM, traceShowId)
+import Debug.Trace (traceM, traceShowId, traceShowM)
 
 main :: IO ()
 main = do
   input <- getContents
-  traceM . display $ part1 input
+  let (idx, ps) = solve input
+  traceShowM idx
+  traceM $ display ps
   print "ZAEZRLZG"
+  print 10105
 
 display :: [Point] -> String
 display = intercalate "\n" . toGrid
@@ -49,12 +52,9 @@ parse = toPoint . map read . words . map keepDigits
 
     toPoint [px, py, vx, vy] = Point (px, py) (vx, vy)
 
-part1 :: String -> [Point]
-part1 = snd . localMinBy fst . map (boxSize &&& id) . iterate (map step) . map parse . lines
+solve :: String -> (Int, [Point])
+solve = second snd . localMinBy (fst . snd) . zip [0 ..] . map (boxSize &&& id) . iterate (map step) . map parse . lines
   where
     localMinBy f (x1 : x2 : x3 : rest)
       | f x1 > f x2 && f x2 < f x3 = x2
       | otherwise = localMinBy f (x2 : x3 : rest)
-
-part2 :: String -> Int
-part2 = undefined
